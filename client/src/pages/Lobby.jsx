@@ -12,7 +12,7 @@ function Lobby() {
   
     { id: "6", title: "FizzBuzz", difficulty: "medium" },
     { id: "7", title: "Remove Duplicates from Array", difficulty: "medium" },
-    { id: "8", title: "Debounce Function", difficulty: "medium" },
+    { id: "8", title: "Async Await with Fetch", difficulty: "medium" },
   
     { id: "9", title: "Deep Clone Object", difficulty: "hard" },
     { id: "10", title: "Custom Promise Implementation", difficulty: "hard" }

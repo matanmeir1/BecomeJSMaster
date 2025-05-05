@@ -22,6 +22,17 @@ app.get("/", (req, res) => {
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
 
+  socket.on("joinRoom", (roomId) => {
+    console.log(`Socket ${socket.id} joined room ${roomId}`);
+    socket.join(roomId);
+  });
+
+  socket.on("codeChange", ({ roomId, code }) => {
+    console.log(`Code received from ${socket.id} in room ${roomId}`);
+    console.log("Code content:", code);
+    socket.to(roomId).emit("codeUpdate", code);
+  });
+
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
   });
