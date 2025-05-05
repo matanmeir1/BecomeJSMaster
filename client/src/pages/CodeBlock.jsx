@@ -7,16 +7,16 @@ import { useNavigate } from "react-router-dom";
 
 
 const codeBlocks = [
-    { id: "1", title: "Reverse a String", difficulty: "easy"  ,template: "// Write your code here" },
-    { id: "2", title: "Check for Palindrome", difficulty: "easy"  ,template: "// Write your code here" },
-    { id: "3", title: "Find Max Number in Array", difficulty: "easy" ,template: "// Write your code here"  },
-    { id: "4", title: "Capitalize First Letters", difficulty: "easy"  ,template: "// Write your code here" },
-    { id: "5", title: "Count Vowels", difficulty: "easy"  ,template: "// Write your code here"  },
-    { id: "6", title: "FizzBuzz", difficulty: "medium" ,template: "// Write your code here"  },
-    { id: "7", title: "Remove Duplicates from Array", difficulty: "medium"  ,template: "// Write your code here" },
-    { id: "8", title: "Async Await with Fetch", difficulty: "medium"  ,template: "// Write your code here" },
-    { id: "9", title: "Deep Clone Object", difficulty: "hard"  ,template: "// Write your code here" },
-    { id: "10", title: "Custom Promise Implementation", difficulty: "hard"  ,template: "// Write your code here" }
+    { id: "1", title: "Reverse a String", difficulty: "easy"  ,template: "// Write your code here" ,solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}` } ,
+    { id: "2", title: "Check for Palindrome", difficulty: "easy"  ,template: "// Write your code here",solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`  },
+    { id: "3", title: "Find Max Number in Array", difficulty: "easy" ,template: "// Write your code here" ,solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`  },
+    { id: "4", title: "Capitalize First Letters", difficulty: "easy"  ,template: "// Write your code here",solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`  },
+    { id: "5", title: "Count Vowels", difficulty: "easy"  ,template: "// Write your code here" ,solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`  },
+    { id: "6", title: "FizzBuzz", difficulty: "medium" ,template: "// Write your code here",solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`   },
+    { id: "7", title: "Remove Duplicates from Array", difficulty: "medium"  ,template: "// Write your code here" ,solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}` },
+    { id: "8", title: "Async Await with Fetch", difficulty: "medium"  ,template: "// Write your code here",solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`  },
+    { id: "9", title: "Deep Clone Object", difficulty: "hard"  ,template: "// Write your code here",solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`  },
+    { id: "10", title: "Custom Promise Implementation", difficulty: "hard"  ,template: "// Write your code here" ,solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`  }
   ];
 
   
@@ -27,6 +27,7 @@ function CodeBlock() {
   const socketRef = useRef();
   const navigate = useNavigate();
   const [role, setRole] = useState(null); // "mentor" / "student"
+  const [solved, setSolved] = useState(false);
 
 
 
@@ -65,6 +66,12 @@ function CodeBlock() {
     setCode(value);
     console.log("sending code:", value);
     socketRef.current.emit("codeChange", { roomId: id, code: value });
+    if (value.trim() === block.solution.trim()) {
+        setSolved(true);
+      } else {
+        setSolved(false);
+      }
+      
   };
 
   if (!block) return <h2>Code block not found</h2>;
@@ -81,6 +88,12 @@ function CodeBlock() {
         onChange={handleChange}
         readOnly={role === "mentor"}
       />
+      {solved && (
+  <div style={{ fontSize: "4rem", textAlign: "center", marginTop: "1rem" }}>
+    😃
+  </div>
+)}
+
     </div>
   );
 }
