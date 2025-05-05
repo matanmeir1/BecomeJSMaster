@@ -1,11 +1,31 @@
 const express = require("express");
 const http = require("http");
-const { Server } = require("socket.io");
 const cors = require("cors");
+const { Server } = require("socket.io");
+const fs = require("fs");
+const path = require("path");
+
 const app = express();
+app.use(cors()); // ✅ השאר רק את זה
+
 const server = http.createServer(app);
 
 const rooms = {}; 
+// טען את התרגילים מהקובץ (בעת עליית השרת)
+const codeblocksPath = path.join(__dirname, "codeblocks.json");
+let codeBlocks = JSON.parse(fs.readFileSync(codeblocksPath, "utf-8"));
+
+app.get("/codeblocks", (req, res) => {
+    res.json(codeBlocks);
+  });
+
+// שליפה של תרגיל לפי מזהה
+app.get("/codeblocks/:id", (req, res) => {
+    const block = codeBlocks.find((b) => b.id === req.params.id);
+    if (!block) return res.status(404).json({ error: "Not found" });
+    res.json(block);
+  });
+  
 
 const io = new Server(server, {
   cors: {

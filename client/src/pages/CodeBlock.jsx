@@ -4,75 +4,79 @@ import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { io } from "socket.io-client";
 import { useNavigate } from "react-router-dom";
+import codeBlocks from "./localCodeBlocks"; // Importing the local code blocks
 
-
-const codeBlocks = [
-    { id: "1", title: "Reverse a String", difficulty: "easy"  ,template: "// Write your code here" ,solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}` } ,
-    { id: "2", title: "Check for Palindrome", difficulty: "easy"  ,template: "// Write your code here",solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`  },
-    { id: "3", title: "Find Max Number in Array", difficulty: "easy" ,template: "// Write your code here" ,solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`  },
-    { id: "4", title: "Capitalize First Letters", difficulty: "easy"  ,template: "// Write your code here",solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`  },
-    { id: "5", title: "Count Vowels", difficulty: "easy"  ,template: "// Write your code here" ,solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`  },
-    { id: "6", title: "FizzBuzz", difficulty: "medium" ,template: "// Write your code here",solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`   },
-    { id: "7", title: "Remove Duplicates from Array", difficulty: "medium"  ,template: "// Write your code here" ,solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}` },
-    { id: "8", title: "Async Await with Fetch", difficulty: "medium"  ,template: "// Write your code here",solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`  },
-    { id: "9", title: "Deep Clone Object", difficulty: "hard"  ,template: "// Write your code here",solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`  },
-    { id: "10", title: "Custom Promise Implementation", difficulty: "hard"  ,template: "// Write your code here" ,solution: `function reverse(str) {\n  return str.split('').reverse().join('');\n}`  }
-  ];
-
-  
 function CodeBlock() {
   const { id } = useParams();
-  const block = codeBlocks.find((b) => b.id === id);
-  const [code, setCode] = useState(block?.template || "");
   const socketRef = useRef();
   const navigate = useNavigate();
   const [role, setRole] = useState(null); // "mentor" / "student"
   const [solved, setSolved] = useState(false);
+  const [block, setBlock] = useState(null);
+  const [code, setCode] = useState("");
 
 
-
+  // 
   useEffect(() => {
-    if (!id) return;
+    fetch(`http://localhost:3001/codeblocks/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Not found");
+        return res.json();
+      })
+      .then((data) => {
+        setBlock(data);
+        setCode(data.template); 
+      })
+      .catch(() => {
+        alert("Code block not found");
+        navigate("/");
+      });
 
     socketRef.current = io("http://localhost:3001");
 
     socketRef.current.on("connect", () => {
-      console.log("Connected to socket:", socketRef.current.id);
       socketRef.current.emit("joinRoom", id);
     });
 
     socketRef.current.on("role", (receivedRole) => {
-        console.log("Received role:", receivedRole);
-        setRole(receivedRole);
-      });
+      setRole(receivedRole);
+    });
 
     socketRef.current.on("codeUpdate", (newCode) => {
-      console.log("Received updated code:", newCode);
       setCode(newCode);
     });
 
     socketRef.current.on("roomClosed", () => {
-        alert("Mentor left the room. Redirecting to lobby...");
-        navigate("/");
-      });
+      alert("Mentor left the room. Redirecting to lobby...");
+      navigate("/");
+    });
 
     return () => {
       socketRef.current.disconnect();
     };
-  }, [id]);
+  }, [id, navigate]);
+
+
+  const normalize = (str) => str.replace(/\s+/g, "").trim();
 
   const handleChange = (value) => {
-    if (value === code) return;
-    setCode(value);
-    console.log("sending code:", value);
-    socketRef.current.emit("codeChange", { roomId: id, code: value });
-    if (value.trim() === block.solution.trim()) {
+    if (value !== code) {
+      setCode(value);
+      socketRef.current.emit("codeChange", { roomId: id, code: value });
+    }
+  
+    if (role === "student") {
+      const correct = codeBlocks.find((b) => b.id === id)?.solution;
+      const normalize = (str) => str.replace(/\s+/g, "").trim();
+  
+      if (correct && normalize(value) === normalize(correct)) {
         setSolved(true);
       } else {
         setSolved(false);
       }
-      
+    }
   };
+  
 
   if (!block) return <h2>Code block not found</h2>;
 
@@ -89,11 +93,10 @@ function CodeBlock() {
         readOnly={role === "mentor"}
       />
       {solved && (
-  <div style={{ fontSize: "4rem", textAlign: "center", marginTop: "1rem" }}>
-    😃
-  </div>
-)}
-
+        <div style={{ fontSize: "4rem", textAlign: "center", marginTop: "1rem" }}>
+          😃
+        </div>
+      )}
     </div>
   );
 }
