@@ -101,29 +101,42 @@ function CodeBlock() {
         setSolved(true);
       });
 
+      // Error handling
+      socket.on("error", ({ message }) => {
+        console.error("Socket error:", message);
+        alert(`Connection error: ${message}`);
+      });
+
       return () => {
         socket.disconnect();
       };
     } catch (error) {
+      console.error("Socket connection error:", error);
+      alert("Failed to connect to the server. Please try again.");
       navigate("/login");
     }
   }, [id, navigate]);
 
   // ───── HANDLE CODE CHANGE ─────
   const handleChange = (value) => {
-    if (value !== code) {
-      setCode(value);
-      socketRef.current.emit("codeChange", { roomId: id, code: value });
-    }
-
-    if (role === "student" && block) {
-      const correct = codeBlocks.find((b) => b.title === block.title)?.solution;
-      const normalize = (str) => str.replace(/\s+/g, "").trim();
-      const isSolved = correct && normalize(value) === normalize(correct);
-      if (isSolved && !solved) {
-        setSolved(true);
-        socketRef.current.emit("solutionFound", { roomId: id });
+    try {
+      if (value !== code) {
+        setCode(value);
+        socketRef.current.emit("codeChange", { roomId: id, code: value });
       }
+
+      if (role === "student" && block) {
+        const correct = codeBlocks.find((b) => b.title === block.title)?.solution;
+        const normalize = (str) => str.replace(/\s+/g, "").trim();
+        const isSolved = correct && normalize(value) === normalize(correct);
+        if (isSolved && !solved) {
+          setSolved(true);
+          socketRef.current.emit("solutionFound", { roomId: id });
+        }
+      }
+    } catch (error) {
+      console.error("Error handling code change:", error);
+      alert("Failed to update code. Please try again.");
     }
   };
 
