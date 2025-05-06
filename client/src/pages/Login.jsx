@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { colors, spacing, shadows, cardStyles, inputStyles, buttonStyles, matrixBackground } from "../styles/common";
 
 function Login({ setIsAuthenticated }) {
   const [name, setName] = useState("");
@@ -21,25 +22,39 @@ function Login({ setIsAuthenticated }) {
       alignItems: "center", 
       justifyContent: "center", 
       minHeight: "100vh",
-      padding: "1rem"
+      padding: spacing.md,
+      position: "relative"
     }}>
+      <div style={matrixBackground} />
+      
       <div style={{
-        padding: "2rem",
-        borderRadius: "8px",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-        backgroundColor: "white",
+        ...cardStyles.glass,
         width: "100%",
-        maxWidth: "400px"
+        maxWidth: "400px",
+        animation: "fadeIn 0.5s ease-in"
       }}>
-        <h2 style={{ marginBottom: "1.5rem", textAlign: "center" }}>Welcome to Code Together!</h2>
+        <h2 style={{ 
+          marginBottom: spacing.lg, 
+          textAlign: "center",
+          color: colors.matrix.green,
+          fontSize: "2rem",
+          textTransform: "uppercase",
+          letterSpacing: "2px",
+          textShadow: shadows.glow
+        }}>
+          Welcome to Code Together
+        </h2>
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "1rem" }}>
+          <div style={{ marginBottom: spacing.md }}>
             <label 
               htmlFor="name" 
               style={{ 
                 display: "block", 
-                marginBottom: "0.5rem",
-                fontWeight: "500"
+                marginBottom: spacing.xs,
+                fontWeight: "500",
+                color: colors.matrix.green,
+                textTransform: "uppercase",
+                letterSpacing: "1px"
               }}
             >
               Enter your name:
@@ -51,35 +66,37 @@ function Login({ setIsAuthenticated }) {
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
               required
-              style={{
-                width: "100%",
-                padding: "0.75rem",
-                borderRadius: "4px",
-                border: "1px solid #ddd",
-                fontSize: "1rem"
-              }}
+              style={inputStyles.base}
             />
           </div>
           <button
             type="submit"
             style={{
+              ...buttonStyles.base,
+              ...buttonStyles.primary,
               width: "100%",
-              padding: "0.75rem",
-              backgroundColor: "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              fontSize: "1rem",
-              cursor: "pointer",
-              transition: "background-color 0.2s"
+              marginTop: spacing.md
             }}
-            onMouseOver={(e) => e.target.style.backgroundColor = "#0056b3"}
-            onMouseOut={(e) => e.target.style.backgroundColor = "#007bff"}
           >
             Start Coding
           </button>
         </form>
       </div>
+
+      <style>
+        {`
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(-20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }

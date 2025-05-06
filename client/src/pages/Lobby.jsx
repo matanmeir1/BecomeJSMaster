@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { colors, spacing, shadows, cardStyles, buttonStyles, matrixBackground } from "../styles/common";
 
 function Lobby({ setIsAuthenticated }) {
   const navigate = useNavigate();
@@ -23,56 +24,117 @@ function Lobby({ setIsAuthenticated }) {
   }, []);
 
   return (
-    <div style={{ padding: "1rem" }}>
+    <div style={{ 
+      padding: spacing.lg,
+      minHeight: "100vh",
+      position: "relative"
+    }}>
+      <div style={matrixBackground} />
+      
       <div style={{ 
-        display: "flex", 
-        justifyContent: "space-between", 
-        alignItems: "center",
-        marginBottom: "2rem"
+        ...cardStyles.glass,
+        marginBottom: spacing.xl,
+        animation: "slideIn 0.5s ease-out"
       }}>
-        <h2>Hello {userName}!</h2>
-        <button
-          onClick={handleSignOut}
-          style={{
-            padding: "0.5rem 1rem",
-            backgroundColor: "#dc3545",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            transition: "background-color 0.2s"
-          }}
-          onMouseOver={(e) => e.target.style.backgroundColor = "#c82333"}
-          onMouseOut={(e) => e.target.style.backgroundColor = "#dc3545"}
-        >
-          Sign Out
-        </button>
+        <div style={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center"
+        }}>
+          <h2 style={{ 
+            color: colors.matrix.green,
+            margin: 0,
+            textTransform: "uppercase",
+            letterSpacing: "1px",
+            textShadow: shadows.glow
+          }}>
+            Hello {userName}!
+          </h2>
+          <button
+            onClick={handleSignOut}
+            style={{
+              ...buttonStyles.base,
+              ...buttonStyles.danger
+            }}
+          >
+            Sign Out
+          </button>
+        </div>
       </div>
 
-      <h3>Choose code block</h3>
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        {blocks.map((block) => (
-          <li key={block.id} style={{ marginBottom: "1rem" }}>
+      <div style={{ 
+        ...cardStyles.glass,
+        animation: "slideIn 0.5s ease-out 0.2s backwards"
+      }}>
+        <h3 style={{ 
+          color: colors.matrix.green,
+          marginTop: 0,
+          marginBottom: spacing.md,
+          textTransform: "uppercase",
+          letterSpacing: "1px",
+          textShadow: shadows.glow
+        }}>
+          Choose code block
+        </h3>
+        <div style={{ 
+          display: "grid",
+          gap: spacing.md,
+          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))"
+        }}>
+          {blocks.map((block) => (
             <button 
+              key={block.id}
               onClick={() => navigate(`/codeblock/${block.id}`)}
               style={{
-                width: "100%",
-                padding: "1rem",
-                backgroundColor: "#f8f9fa",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
+                ...buttonStyles.base,
+                ...buttonStyles.secondary,
                 textAlign: "left",
-                cursor: "pointer",
-                transition: "background-color 0.2s"
+                padding: spacing.md,
+                backgroundColor: colors.matrix.darkGray,
+                color: colors.matrix.green,
+                border: `1px solid ${colors.matrix.green}`,
+                transition: "all 0.3s ease",
+                '&:hover': {
+                  backgroundColor: colors.matrix.green,
+                  color: colors.matrix.black,
+                  transform: "translateY(-2px)",
+                  boxShadow: shadows.glow
+                }
               }}
-              onMouseOver={(e) => e.target.style.backgroundColor = "#e9ecef"}
-              onMouseOut={(e) => e.target.style.backgroundColor = "#f8f9fa"}
             >
-              {block.title} ({block.difficulty})
+              <div style={{ 
+                fontWeight: "500",
+                textTransform: "uppercase",
+                letterSpacing: "1px"
+              }}>
+                {block.title}
+              </div>
+              <div style={{ 
+                fontSize: "0.875rem",
+                color: colors.accent.blue,
+                marginTop: spacing.xs
+              }}>
+                Difficulty: {block.difficulty}
+              </div>
             </button>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </div>
+      </div>
+
+      <style>
+        {`
+          @keyframes slideIn {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }

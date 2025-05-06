@@ -8,6 +8,7 @@ import codeBlocks from "./localCodeBlocks"; // includes solution
 import PresencePanel from "./PresencePanel";
 import HintPanel from "./HintPanel";
 import { getRandomMotivation } from "../utils/motivations";
+import { colors, spacing, shadows, cardStyles, buttonStyles, matrixBackground, borderRadius } from "../styles/common";
 
 // ───── UTILS ─────
 function getUserId() {
@@ -19,7 +20,7 @@ function getUserId() {
 }
 
 // ───── MAIN COMPONENT ─────
-function CodeBlock() {
+function CodeBlock({ setIsAuthenticated }) {
   const { id } = useParams(); // block ID from URL
   const navigate = useNavigate();
   const socketRef = useRef();
@@ -140,81 +141,183 @@ function CodeBlock() {
     }
   };
 
+  const handleSignOut = () => {
+    localStorage.removeItem("userName");
+    setIsAuthenticated(false);
+    navigate("/login");
+  };
+
   if (!block) return <h2>Code block not found</h2>;
 
   // ───── RENDER UI ─────
   return (
-    <div style={{ padding: "1rem" }}>
+    <div style={{ 
+      padding: spacing.lg,
+      minHeight: "100vh",
+      position: "relative",
+      backgroundColor: colors.matrix.black
+    }}>
+      <div style={matrixBackground} />
+
       <div style={{ 
-        display: "flex", 
-        justifyContent: "space-between", 
-        alignItems: "center",
-        marginBottom: "2rem"
+        ...cardStyles.glass,
+        marginBottom: spacing.xl,
+        animation: "slideIn 0.5s ease-out"
       }}>
-        <div>
-          {role === "mentor" ? (
-            <>
-              <h2>You're the room Mentor {userName}!</h2>
-              <p style={{ color: "#666", marginTop: "0.5rem" }}>
-                With great power comes great responsibility
-              </p>
-            </>
-          ) : (
-            <>
-              <h2>Good luck {userName}!</h2>
-              <p style={{ color: "#666", marginTop: "0.5rem" }}>
-                {motivation}
-              </p>
-            </>
-          )}
+        <div style={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center"
+        }}>
+          <div>
+            {role === "mentor" ? (
+              <>
+                <h2 style={{ 
+                  color: colors.matrix.green,
+                  margin: 0,
+                  textTransform: "uppercase",
+                  letterSpacing: "1px",
+                  textShadow: shadows.glow
+                }}>
+                  You're the room Mentor {userName}!
+                </h2>
+                <p style={{ 
+                  color: colors.accent.blue,
+                  marginTop: spacing.xs,
+                  fontStyle: "italic"
+                }}>
+                  With great power comes great responsibility
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 style={{ 
+                  color: colors.matrix.green,
+                  margin: 0,
+                  textTransform: "uppercase",
+                  letterSpacing: "1px",
+                  textShadow: shadows.glow
+                }}>
+                  Good luck {userName}!
+                </h2>
+                <p style={{ 
+                  color: colors.accent.blue,
+                  marginTop: spacing.xs,
+                  fontStyle: "italic"
+                }}>
+                  {motivation}
+                </p>
+              </>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: spacing.sm }}>
+            <button
+              onClick={() => navigate("/")}
+              style={{
+                ...buttonStyles.base,
+                ...buttonStyles.secondary
+              }}
+            >
+              Back to Lobby
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => navigate("/")}
-          style={{
-            padding: "0.5rem 1rem",
-            backgroundColor: "#6c757d",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            transition: "background-color 0.2s"
-          }}
-          onMouseOver={(e) => e.target.style.backgroundColor = "#5a6268"}
-          onMouseOut={(e) => e.target.style.backgroundColor = "#6c757d"}
-        >
-          Back to Lobby
-        </button>
       </div>
 
-      <div style={{ display: "flex", gap: "1rem" }}>
-        <div style={{ flex: 1 }}>
-          <h3>{block.title}</h3>
-          <p>Difficulty: {block.difficulty}</p>
-          <p>Role: {role}</p>
+      <div style={{ display: "flex", gap: spacing.lg }}>
+        <div style={{ 
+          ...cardStyles.glass,
+          flex: 1,
+          animation: "slideIn 0.5s ease-out 0.2s backwards"
+        }}>
+          <h3 style={{ 
+            color: colors.matrix.green,
+            marginTop: 0,
+            marginBottom: spacing.md,
+            textTransform: "uppercase",
+            letterSpacing: "1px",
+            textShadow: shadows.glow
+          }}>
+            {block.title}
+          </h3>
+          <div style={{ 
+            display: "flex",
+            gap: spacing.md,
+            marginBottom: spacing.md
+          }}>
+            <span style={{ 
+              color: colors.accent.blue,
+              fontSize: "0.875rem"
+            }}>
+              Difficulty: {block.difficulty}
+            </span>
+            <span style={{ 
+              color: colors.accent.purple,
+              fontSize: "0.875rem"
+            }}>
+              Role: {role}
+            </span>
+          </div>
 
-          <CodeMirror
-            value={code}
-            height="300px"
-            extensions={[javascript()]}
-            onChange={handleChange}
-            readOnly={role === "mentor"}
-            placeholder={role === "student" ? "Write your code here..." : ""}
-          />
+          <div style={{
+            border: `1px solid ${colors.matrix.green}`,
+            borderRadius: borderRadius.sm,
+            overflow: "hidden",
+            backgroundColor: colors.matrix.black
+          }}>
+            <CodeMirror
+              value={code}
+              height="300px"
+              extensions={[javascript()]}
+              onChange={handleChange}
+              readOnly={role === "mentor"}
+              placeholder={role === "student" ? "Write your code here..." : ""}
+              theme="dark"
+              basicSetup={{
+                lineNumbers: true,
+                highlightActiveLineGutter: true,
+                highlightSpecialChars: true,
+                foldGutter: true,
+                drawSelection: true,
+                dropCursor: true,
+                allowMultipleSelections: true,
+                indentOnInput: true,
+                syntaxHighlighting: true,
+                bracketMatching: true,
+                closeBrackets: true,
+                autocompletion: true,
+                rectangularSelection: true,
+                crosshairCursor: true,
+                highlightActiveLine: true,
+                highlightSelectionMatches: true,
+                closeBracketsKeymap: true,
+                searchKeymap: true,
+                foldKeymap: true,
+                completionKeymap: true,
+                lintKeymap: true
+              }}
+            />
+          </div>
 
           {solved && (
             <div style={{ 
               fontSize: "4rem", 
               textAlign: "center", 
-              marginTop: "1rem",
+              marginTop: spacing.lg,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: "1rem"
+              gap: spacing.md,
+              animation: "fadeIn 0.5s ease-out"
             }}>
               {role === "student" ? (
-                <div>😃</div>
+                <div style={{ textShadow: shadows.glow }}>😃</div>
               ) : (
-                <div style={{ fontSize: "1.5rem", color: "#28a745" }}>
+                <div style={{ 
+                  fontSize: "1.5rem", 
+                  color: colors.accent.blue,
+                  textShadow: shadows.glow
+                }}>
                   A student solved the challenge! 🎉
                 </div>
               )}
@@ -231,6 +334,29 @@ function CodeBlock() {
       </div>
 
       <PresencePanel mentor={mentorId} students={students} />
+
+      <style>
+        {`
+          @keyframes slideIn {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+            }
+            to {
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }

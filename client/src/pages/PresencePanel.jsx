@@ -1,22 +1,94 @@
 import React from "react";
+import { colors, spacing, shadows, cardStyles } from "../styles/common";
 
 function PresencePanel({ mentor, students }) {
   return (
-    <div style={{ marginTop: "2rem", padding: "1rem", border: "1px solid #ddd", borderRadius: "8px" }}>
-      <h3>👥 Live Presence</h3>
+    <div style={{
+      ...cardStyles.glass,
+      position: "fixed",
+      bottom: spacing.lg,
+      right: spacing.lg,
+      padding: spacing.md,
+      minWidth: "200px",
+      animation: "slideIn 0.5s ease-out"
+    }}>
+      <h4 style={{ 
+        color: colors.matrix.green,
+        margin: 0,
+        marginBottom: spacing.sm,
+        textTransform: "uppercase",
+        letterSpacing: "1px",
+        textShadow: shadows.glow
+      }}>
+        Room Members
+      </h4>
+      <div style={{ marginBottom: spacing.sm }}>
+        <div style={{ 
+          color: colors.accent.blue,
+          fontWeight: "bold",
+          marginBottom: spacing.xs
+        }}>
+          Mentor:
+        </div>
+        <div style={{ 
+          color: colors.matrix.green,
+          padding: spacing.xs,
+          borderRadius: "4px",
+          backgroundColor: "rgba(0, 255, 65, 0.1)"
+        }}>
+          {mentor || "Waiting for mentor..."}
+        </div>
+      </div>
       <div>
-        🧑‍🏫 Mentor: <strong>{mentor || "None"}</strong>
+        <div style={{ 
+          color: colors.accent.purple,
+          fontWeight: "bold",
+          marginBottom: spacing.xs
+        }}>
+          Students:
+        </div>
+        {students.length > 0 ? (
+          students.map((student) => (
+            <div
+              key={student}
+              style={{ 
+                color: colors.matrix.green,
+                padding: spacing.xs,
+                marginBottom: spacing.xs,
+                borderRadius: "4px",
+                backgroundColor: "rgba(0, 255, 65, 0.1)"
+              }}
+            >
+              {student}
+            </div>
+          ))
+        ) : (
+          <div style={{ 
+            color: colors.matrix.green,
+            fontStyle: "italic",
+            padding: spacing.xs,
+            borderRadius: "4px",
+            backgroundColor: "rgba(0, 255, 65, 0.1)"
+          }}>
+            No students yet
+          </div>
+        )}
       </div>
-      <div style={{ marginTop: "0.5rem" }}>
-        Students ({students.length} online):
-        <ul style={{ paddingLeft: "1rem", listStyle: "none" }}>
-          {students.map((name) => (
-            <li key={name} style={{ marginTop: "0.25rem" }}>
-              👨‍🎓 {name}
-            </li>
-          ))}
-        </ul>
-      </div>
+
+      <style>
+        {`
+          @keyframes slideIn {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }

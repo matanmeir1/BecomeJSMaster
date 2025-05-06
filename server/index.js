@@ -32,11 +32,14 @@ app.get("/codeblocks", async (req, res) => {
       projection: { solution: 0 } 
     }).toArray();
     
-    // Add id field based on _id
+    // Add id field based on _id and sort by difficulty
     const blocksWithId = blocks.map(block => ({
       ...block,
       id: block._id.toString()
-    }));
+    })).sort((a, b) => {
+      const difficultyOrder = { 'easy': 1, 'medium': 2, 'hard': 3 };
+      return difficultyOrder[a.difficulty.toLowerCase()] - difficultyOrder[b.difficulty.toLowerCase()];
+    });
     
     res.json(blocksWithId);
   } catch (error) {
