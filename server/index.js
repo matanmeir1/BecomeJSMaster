@@ -1,3 +1,4 @@
+// ───── DEPENDENCIES ─────
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
@@ -5,66 +6,64 @@ const { Server } = require("socket.io");
 const fs = require("fs");
 const path = require("path");
 
+// ───── APP SETUP ─────
 const app = express();
-app.use(cors()); // ✅ השאר רק את זה
-
-const server = http.createServer(app);
-
-const rooms = {}; 
-// טען את התרגילים מהקובץ (בעת עליית השרת)
-const codeblocksPath = path.join(__dirname, "codeblocks.json");
-let codeBlocks = JSON.parse(fs.readFileSync(codeblocksPath, "utf-8"));
-
-app.get("/codeblocks", (req, res) => {
-    res.json(codeBlocks);
-  });
-
-// שליפה של תרגיל לפי מזהה
-app.get("/codeblocks/:id", (req, res) => {
-    const block = codeBlocks.find((b) => b.id === req.params.id);
-    if (!block) return res.status(404).json({ error: "Not found" });
-    res.json(block);
-  });
-  
-
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"]
-  }
-});
-
-
 app.use(cors());
 
-app.get("/", (req, res) => {
-  res.send("Server is running");
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: "http://localhost:5173", methods: ["GET", "POST"] },
 });
 
+// ───── DATA: LOAD CODEBLOCKS ─────
+const codeblocksPath = path.join(__dirname, "codeblocks.json");
+let codeBlocks = [];
+
+try {
+  const raw = fs.readFileSync(codeblocksPath, "utf-8");
+  codeBlocks = JSON.parse(raw);
+  console.log("Loaded codeblocks.json successfully");
+} catch (err) {
+  console.error("Failed to load codeblocks.json:", err.message);
+}
+
+// ───── ROUTES ─────
+app.get("/codeblocks", (req, res) => {
+  res.json(codeBlocks);
+});
+
+app.get("/codeblocks/:id", (req, res) => {
+  const block = codeBlocks.find((b) => b.id === req.params.id);
+  if (!block) {
+    return res.status(404).json({ error: "Not found" });
+  }
+  res.json(block);
+});
+
+// ───── SOCKET.IO ROOMS LOGIC ─────
+const rooms = {}; // roomId => { mentor: userId|null, students: Set<userId> }
+const userSocketMap = new Map(); // userId => socket.id
 
 io.on("connection", (socket) => {
-  console.log("Client connected:", socket.id);
+  console.log("🔌 New connection");
 
-  socket.on("joinRoom", (roomId) => {
+  socket.on("joinRoom", ({ roomId, userId }) => {
     socket.join(roomId);
+    socket.roomId = roomId;
+    socket.userId = userId;
+
+    userSocketMap.set(userId, socket.id); // store user socket
 
     if (!rooms[roomId]) {
-      // first user in the room – mentor
-      rooms[roomId] = {
-        mentorId: socket.id,
-        students: [],
-      };
+      // first user = mentor
+      rooms[roomId] = { mentor: userId, students: new Set() };
       socket.emit("role", "mentor");
-      console.log(`Mentor assigned: ${socket.id} in room ${roomId}`);
     } else {
-      // other users are students
-      rooms[roomId].students.push(socket.id);
+      rooms[roomId].students.add(userId);
       socket.emit("role", "student");
-      console.log(`Student joined: ${socket.id} in room ${roomId}`);
     }
 
-    // saving the roomId in the socket object
-    socket.roomId = roomId;
+    updatePresence(roomId);
   });
 
   socket.on("codeChange", ({ roomId, code }) => {
@@ -72,28 +71,40 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    const roomId = socket.roomId;
+    const { roomId, userId } = socket;
     if (!roomId || !rooms[roomId]) return;
 
-    if (rooms[roomId].mentorId === socket.id) {
-      // case mentor left
-      console.log(`Mentor left room ${roomId}, closing room.`);
-      // force close the room
-      rooms[roomId].students.forEach((studentId) => {
-        io.to(studentId).emit("roomClosed");
+    const room = rooms[roomId];
+
+    userSocketMap.delete(userId);
+
+    if (room.mentor === userId) {
+      // mentor left – close room
+      room.students.forEach((studentId) => {
+        const studentSocketId = userSocketMap.get(studentId);
+        if (studentSocketId) {
+          io.to(studentSocketId).emit("roomClosed");
+        }
       });
       delete rooms[roomId];
     } else {
-      // case student left
-      rooms[roomId].students = rooms[roomId].students.filter(
-        (id) => id !== socket.id
-      );
-      console.log(`Student ${socket.id} left room ${roomId}`);
+      room.students.delete(userId);
+      updatePresence(roomId);
     }
   });
+
+  function updatePresence(roomId) {
+    const room = rooms[roomId];
+    if (!room) return;
+
+    io.to(roomId).emit("presenceUpdate", {
+      mentor: room.mentor,
+      students: Array.from(room.students),
+    });
+  }
 });
 
-const PORT = 3001;
-server.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+// ───── START SERVER ─────
+server.listen(3000, () => {
+  console.log("Server listening on port 3000");
 });
