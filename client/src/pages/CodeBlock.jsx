@@ -6,15 +6,15 @@ import { javascript } from "@codemirror/lang-javascript";
 import { io } from "socket.io-client";
 import codeBlocks from "./localCodeBlocks"; // includes solution
 import PresencePanel from "./PresencePanel";
+import { getRandomMotivation } from "../utils/motivations";
 
 // ───── UTILS ─────
-function getOrCreateUserId() {
-  let id = localStorage.getItem("userId");
-  if (!id) {
-    id = "user_" + Math.random().toString(36).substring(2, 8);
-    localStorage.setItem("userId", id);
+function getUserId() {
+  const userName = localStorage.getItem("userName");
+  if (!userName) {
+    throw new Error("User not authenticated");
   }
-  return id;
+  return userName;
 }
 
 // ───── MAIN COMPONENT ─────
@@ -22,6 +22,8 @@ function CodeBlock() {
   const { id } = useParams(); // block ID from URL
   const navigate = useNavigate();
   const socketRef = useRef();
+  const userName = localStorage.getItem("userName");
+  const [motivation] = useState(getRandomMotivation());
 
   // ───── STATE HOOKS ─────
   const [role, setRole] = useState(null);       // "mentor" | "student"
@@ -50,38 +52,42 @@ function CodeBlock() {
 
   // ───── SOCKET CONNECTION ─────
   useEffect(() => {
-    socketRef.current = io("http://localhost:3000");
-    const socket = socketRef.current;
-    const userId = getOrCreateUserId();
+    try {
+      const userId = getUserId();
+      socketRef.current = io("http://localhost:3000");
+      const socket = socketRef.current;
 
-    // Initial join
-    socket.emit("joinRoom", { roomId: id, userId });
+      // Initial join
+      socket.emit("joinRoom", { roomId: id, userId });
 
-    // Receive role from server
-    socket.on("role", (receivedRole) => {
-      setRole(receivedRole);
-    });
+      // Receive role from server
+      socket.on("role", (receivedRole) => {
+        setRole(receivedRole);
+      });
 
-    // Code update from others
-    socket.on("codeUpdate", (newCode) => {
-      setCode(newCode);
-    });
+      // Code update from others
+      socket.on("codeUpdate", (newCode) => {
+        setCode(newCode);
+      });
 
-    // If mentor left
-    socket.on("roomClosed", () => {
-      alert("Mentor left. Returning to lobby...");
-      navigate("/");
-    });
+      // If mentor left
+      socket.on("roomClosed", () => {
+        alert("Mentor left. Returning to lobby...");
+        navigate("/");
+      });
 
-    // Presence updates (mentor + students)
-    socket.on("presenceUpdate", ({ mentor, students }) => {
-      setMentorId(mentor);
-      setStudents(students);
-    });
+      // Presence updates (mentor + students)
+      socket.on("presenceUpdate", ({ mentor, students }) => {
+        setMentorId(mentor);
+        setStudents(students);
+      });
 
-    return () => {
-      socket.disconnect();
-    };
+      return () => {
+        socket.disconnect();
+      };
+    } catch (error) {
+      navigate("/login");
+    }
   }, [id, navigate]);
 
   // ───── HANDLE CODE CHANGE ─────
@@ -103,7 +109,48 @@ function CodeBlock() {
   // ───── RENDER UI ─────
   return (
     <div style={{ padding: "1rem" }}>
-      <h2>{block.title}</h2>
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "space-between", 
+        alignItems: "center",
+        marginBottom: "2rem"
+      }}>
+        <div>
+          {role === "mentor" ? (
+            <>
+              <h2>You're the room Mentor {userName}!</h2>
+              <p style={{ color: "#666", marginTop: "0.5rem" }}>
+                With great power comes great responsibility
+              </p>
+            </>
+          ) : (
+            <>
+              <h2>Good luck {userName}!</h2>
+              <p style={{ color: "#666", marginTop: "0.5rem" }}>
+                {motivation}
+              </p>
+            </>
+          )}
+        </div>
+        <button
+          onClick={() => navigate("/")}
+          style={{
+            padding: "0.5rem 1rem",
+            backgroundColor: "#6c757d",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            transition: "background-color 0.2s"
+          }}
+          onMouseOver={(e) => e.target.style.backgroundColor = "#5a6268"}
+          onMouseOut={(e) => e.target.style.backgroundColor = "#6c757d"}
+        >
+          Back to Lobby
+        </button>
+      </div>
+
+      <h3>{block.title}</h3>
       <p>Difficulty: {block.difficulty}</p>
       <p>Role: {role}</p>
 

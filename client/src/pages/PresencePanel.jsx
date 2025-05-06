@@ -9,9 +9,11 @@ function PresencePanel({ mentor, students }) {
       </div>
       <div style={{ marginTop: "0.5rem" }}>
         Students ({students.length} online):
-        <ul style={{ paddingLeft: "1rem" }}>
-          {students.map((id) => (
-            <li key={id}>{id}</li>
+        <ul style={{ paddingLeft: "1rem", listStyle: "none" }}>
+          {students.map((name) => (
+            <li key={name} style={{ marginTop: "0.25rem" }}>
+              👨‍🎓 {name}
+            </li>
           ))}
         </ul>
       </div>
