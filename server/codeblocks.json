@@ -1,13 +1,13 @@
 [
-    { "id": "1", "title": "Reverse a String", "difficulty": "easy", "template": "// Write your code here" },
-    { "id": "2", "title": "Check for Palindrome", "difficulty": "easy", "template": "// Write your code here" },
-    { "id": "3", "title": "Find Max Number in Array", "difficulty": "easy", "template": "// Write your code here" },
-    { "id": "4", "title": "Capitalize First Letters", "difficulty": "easy", "template": "// Write your code here" },
-    { "id": "5", "title": "Count Vowels", "difficulty": "easy", "template": "// Write your code here" },
-    { "id": "6", "title": "FizzBuzz", "difficulty": "medium", "template": "// Write your code here" },
-    { "id": "7", "title": "Remove Duplicates from Array", "difficulty": "medium", "template": "// Write your code here" },
-    { "id": "8", "title": "Async Await with Fetch", "difficulty": "medium", "template": "// Write your code here" },
-    { "id": "9", "title": "Deep Clone Object", "difficulty": "hard", "template": "// Write your code here" },
-    { "id": "10", "title": "Custom Promise Implementation", "difficulty": "hard", "template": "// Write your code here" }
+    { "id": "1", "title": "Reverse a String", "difficulty": "easy", "template": "// Write your code here", "hints": [ "Use the reverse() function", "Don't forget to split and join" ] },
+    { "id": "2", "title": "Check for Palindrome", "difficulty": "easy", "template": "// Write your code here", "hints": [ "You can use the same reverse logic from the previous exercise", "Compare the original string with the reversed one" ] },
+    { "id": "3", "title": "Find Max Number in Array", "difficulty": "easy", "template": "// Write your code here", "hints": [ "Math.max() can help you find the maximum value", "You can use the spread operator (...) to pass array elements as arguments" ] },
+    { "id": "4", "title": "Capitalize First Letters", "difficulty": "easy", "template": "// Write your code here", "hints": [ "Split the string into words first", "Use charAt(0) to get the first letter and toUpperCase() to capitalize it" ] },
+    { "id": "5", "title": "Count Vowels", "difficulty": "easy", "template": "// Write your code here", "hints": [ "Regular expressions can help you find vowels", "Use the match() method with a regex pattern" ] },
+    { "id": "6", "title": "FizzBuzz", "difficulty": "medium", "template": "// Write your code here", "hints": [ "Use a loop to iterate through numbers", "Check divisibility using the modulo operator (%)" ] },
+    { "id": "7", "title": "Remove Duplicates from Array", "difficulty": "medium", "template": "// Write your code here", "hints": [ "Set can help you remove duplicates", "You can convert the Set back to an array using spread operator" ] },
+    { "id": "8", "title": "Async Await with Fetch", "difficulty": "medium", "template": "// Write your code here", "hints": [ "Use async/await to handle the fetch request", "Don't forget to parse the response with .json()" ] },
+    { "id": "9", "title": "Deep Clone Object", "difficulty": "hard", "template": "// Write your code here", "hints": [ "JSON.stringify() and JSON.parse() can help create a deep copy", "Be careful with functions and circular references" ] },
+    { "id": "10", "title": "Custom Promise Implementation", "difficulty": "hard", "template": "// Write your code here", "hints": [ "Create a class with a constructor that takes an executor function", "Implement then() method to handle the success callback" ] }
   ]
   

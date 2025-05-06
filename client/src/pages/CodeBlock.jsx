@@ -6,6 +6,7 @@ import { javascript } from "@codemirror/lang-javascript";
 import { io } from "socket.io-client";
 import codeBlocks from "./localCodeBlocks"; // includes solution
 import PresencePanel from "./PresencePanel";
+import HintPanel from "./HintPanel";
 import { getRandomMotivation } from "../utils/motivations";
 
 // ───── UTILS ─────
@@ -82,6 +83,11 @@ function CodeBlock() {
         setStudents(students);
       });
 
+      // Listen for solution found
+      socket.on("solutionFound", () => {
+        setSolved(true);
+      });
+
       return () => {
         socket.disconnect();
       };
@@ -100,7 +106,11 @@ function CodeBlock() {
     if (role === "student") {
       const correct = codeBlocks.find((b) => b.id === id)?.solution;
       const normalize = (str) => str.replace(/\s+/g, "").trim();
-      setSolved(correct && normalize(value) === normalize(correct));
+      const isSolved = correct && normalize(value) === normalize(correct);
+      if (isSolved && !solved) {
+        setSolved(true);
+        socketRef.current.emit("solutionFound", { roomId: id });
+      }
     }
   };
 
@@ -150,23 +160,48 @@ function CodeBlock() {
         </button>
       </div>
 
-      <h3>{block.title}</h3>
-      <p>Difficulty: {block.difficulty}</p>
-      <p>Role: {role}</p>
+      <div style={{ display: "flex", gap: "1rem" }}>
+        <div style={{ flex: 1 }}>
+          <h3>{block.title}</h3>
+          <p>Difficulty: {block.difficulty}</p>
+          <p>Role: {role}</p>
 
-      <CodeMirror
-        value={code}
-        height="300px"
-        extensions={[javascript()]}
-        onChange={handleChange}
-        readOnly={role === "mentor"}
-      />
+          <CodeMirror
+            value={code}
+            height="300px"
+            extensions={[javascript()]}
+            onChange={handleChange}
+            readOnly={role === "mentor"}
+          />
 
-      {solved && (
-        <div style={{ fontSize: "4rem", textAlign: "center", marginTop: "1rem" }}>
-          😃
+          {solved && (
+            <div style={{ 
+              fontSize: "4rem", 
+              textAlign: "center", 
+              marginTop: "1rem",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "1rem"
+            }}>
+              {role === "student" ? (
+                <div>😃</div>
+              ) : (
+                <div style={{ fontSize: "1.5rem", color: "#28a745" }}>
+                  A student solved the challenge! 🎉
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      )}
+
+        <HintPanel 
+          role={role}
+          hints={block.hints}
+          socket={socketRef.current}
+          roomId={id}
+        />
+      </div>
 
       <PresencePanel mentor={mentorId} students={students} />
     </div>

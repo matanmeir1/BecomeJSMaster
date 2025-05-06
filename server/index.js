@@ -70,6 +70,43 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit("codeUpdate", code);
   });
 
+  socket.on("requestHint", ({ roomId, hintNumber }) => {
+    const room = rooms[roomId];
+    if (room && room.mentor) {
+      const mentorSocketId = userSocketMap.get(room.mentor);
+      if (mentorSocketId) {
+        io.to(mentorSocketId).emit("hintRequested", { hintNumber });
+      }
+    }
+  });
+
+  socket.on("approveHint", ({ roomId, hintNumber }) => {
+    io.to(roomId).emit("hintApproved", { hintNumber });
+  });
+
+  socket.on("requestSolution", ({ roomId }) => {
+    const room = rooms[roomId];
+    if (room && room.mentor) {
+      const mentorSocketId = userSocketMap.get(room.mentor);
+      if (mentorSocketId) {
+        io.to(mentorSocketId).emit("solutionRequested");
+      }
+    }
+  });
+
+  socket.on("approveSolution", ({ roomId }) => {
+    io.to(roomId).emit("solutionApproved");
+  });
+
+  socket.on("showSolution", ({ roomId }) => {
+    io.to(roomId).emit("solutionShown");
+  });
+
+  socket.on("solutionFound", ({ roomId }) => {
+    // Broadcast to everyone in the room
+    io.to(roomId).emit("solutionFound");
+  });
+
   socket.on("disconnect", () => {
     const { roomId, userId } = socket;
     if (!roomId || !rooms[roomId]) return;
