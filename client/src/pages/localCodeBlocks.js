@@ -1,25 +1,25 @@
 const codeBlocks = [
     {
-      id: "1",
+      title: "Reverse a String",
       solution: `function reverse(str) {
     return str.split('').reverse().join('');
   }`
     },
     {
-      id: "2",
+      title: "Check for Palindrome",
       solution: `function isPalindrome(str) {
     const reversed = str.split('').reverse().join('');
     return str === reversed;
   }`
     },
     {
-      id: "3",
+      title: "Find Max Number in Array",
       solution: `function findMax(arr) {
     return Math.max(...arr);
   }`
     },
     {
-      id: "4",
+      title: "Capitalize First Letters",
       solution: `function capitalize(str) {
     return str
       .split(' ')
@@ -28,59 +28,58 @@ const codeBlocks = [
   }`
     },
     {
-      id: "5",
+      title: "Count Vowels",
       solution: `function countVowels(str) {
-    return (str.match(/[aeiou]/gi) || []).length;
+    const vowels = 'aeiou';
+    return str.toLowerCase().split('').filter(char => vowels.includes(char)).length;
   }`
     },
     {
-      id: "6",
-      solution: `function fizzBuzz(n) {
-    for (let i = 1; i <= n; i++) {
-      let out = '';
-      if (i % 3 === 0) out += 'Fizz';
-      if (i % 5 === 0) out += 'Buzz';
-      console.log(out || i);
+      title: "Find Duplicates",
+      solution: `function findDuplicates(arr) {
+    return arr.filter((item, index) => arr.indexOf(item) !== index);
+  }`
+    },
+    {
+      title: "Flatten Array",
+      solution: `function flattenArray(arr) {
+    return arr.flat(Infinity);
+  }`
+    },
+    {
+      title: "Check Prime Number",
+      solution: `function isPrime(num) {
+    if (num <= 1) return false;
+    for (let i = 2; i <= Math.sqrt(num); i++) {
+      if (num % i === 0) return false;
     }
+    return true;
   }`
     },
     {
-      id: "7",
-      solution: `function removeDuplicates(arr) {
-    return [...new Set(arr)];
+      title: "Find Missing Number",
+      solution: `function findMissingNumber(arr) {
+    const n = arr.length + 1;
+    const expectedSum = (n * (n + 1)) / 2;
+    const actualSum = arr.reduce((sum, num) => sum + num, 0);
+    return expectedSum - actualSum;
   }`
     },
     {
-      id: "8",
-      solution: `async function fetchData(url) {
-    const res = await fetch(url);
-    const data = await res.json();
-    return data;
-  }`
-    },
-    {
-      id: "9",
-      solution: `function deepClone(obj) {
-    return JSON.parse(JSON.stringify(obj));
-  }`
-    },
-    {
-      id: "10",
-      solution: `class MyPromise {
-    constructor(fn) {
-      this.success = null;
-      fn(this.resolve.bind(this));
-    }
-  
-    then(cb) {
-      this.success = cb;
-    }
-  
-    resolve(value) {
-      if (this.success) {
-        this.success(value);
+      title: "Check Balanced Parentheses",
+      solution: `function isBalanced(str) {
+    const stack = [];
+    const pairs = { '(': ')', '[': ']', '{': '}' };
+    
+    for (let char of str) {
+      if (pairs[char]) {
+        stack.push(char);
+      } else if (Object.values(pairs).includes(char)) {
+        if (pairs[stack.pop()] !== char) return false;
       }
     }
+    
+    return stack.length === 0;
   }`
     }
   ];

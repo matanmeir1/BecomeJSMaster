@@ -43,7 +43,6 @@ function CodeBlock() {
       })
       .then((data) => {
         setBlock(data);
-        setCode(data.template);
       })
       .catch(() => {
         alert("Code block not found");
@@ -66,8 +65,22 @@ function CodeBlock() {
         setRole(receivedRole);
       });
 
+      // Receive complete room state when joining
+      socket.on("roomState", ({ code: roomCode, solved, hintStates }) => {
+        console.log("Received room state:", { roomCode, solved, hintStates }); // Debug log
+        if (roomCode) {
+          setCode(roomCode);
+        }
+        if (solved) {
+          setSolved(true);
+        }
+        // Pass hint states to HintPanel through socket
+        socket.emit("hintStatesUpdate", hintStates);
+      });
+
       // Code update from others
       socket.on("codeUpdate", (newCode) => {
+        console.log("Received code update:", newCode); // Debug log
         setCode(newCode);
       });
 
@@ -103,8 +116,8 @@ function CodeBlock() {
       socketRef.current.emit("codeChange", { roomId: id, code: value });
     }
 
-    if (role === "student") {
-      const correct = codeBlocks.find((b) => b.id === id)?.solution;
+    if (role === "student" && block) {
+      const correct = codeBlocks.find((b) => b.title === block.title)?.solution;
       const normalize = (str) => str.replace(/\s+/g, "").trim();
       const isSolved = correct && normalize(value) === normalize(correct);
       if (isSolved && !solved) {
@@ -172,6 +185,7 @@ function CodeBlock() {
             extensions={[javascript()]}
             onChange={handleChange}
             readOnly={role === "mentor"}
+            placeholder={role === "student" ? "Write your code here..." : ""}
           />
 
           {solved && (

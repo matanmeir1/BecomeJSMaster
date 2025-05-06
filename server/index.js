@@ -1,10 +1,13 @@
+// ───── LOAD ENVIRONMENT VARIABLES ─────
+require("dotenv").config();
+
 // ───── DEPENDENCIES ─────
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io");
-const fs = require("fs");
-const path = require("path");
+const { connectToMongo, getDb } = require("./db");
+const { ObjectId } = require('mongodb');
 
 // ───── APP SETUP ─────
 const app = express();
@@ -15,33 +18,71 @@ const io = new Server(server, {
   cors: { origin: "http://localhost:5173", methods: ["GET", "POST"] },
 });
 
-// ───── DATA: LOAD CODEBLOCKS ─────
-const codeblocksPath = path.join(__dirname, "codeblocks.json");
-let codeBlocks = [];
+// ───── MONGODB CONNECTION ─────
+connectToMongo();
 
-try {
-  const raw = fs.readFileSync(codeblocksPath, "utf-8");
-  codeBlocks = JSON.parse(raw);
-  console.log("Loaded codeblocks.json successfully");
-} catch (err) {
-  console.error("Failed to load codeblocks.json:", err.message);
-}
+// ───── MODELS ─────
+const CodeBlock = require("./models/CodeBlock");
 
 // ───── ROUTES ─────
-app.get("/codeblocks", (req, res) => {
-  res.json(codeBlocks);
+app.get("/codeblocks", async (req, res) => {
+  try {
+    const db = getDb();
+    const blocks = await db.collection('codeblocks').find({}, { 
+      projection: { solution: 0 } 
+    }).toArray();
+    
+    // Add id field based on _id
+    const blocksWithId = blocks.map(block => ({
+      ...block,
+      id: block._id.toString()
+    }));
+    
+    res.json(blocksWithId);
+  } catch (error) {
+    console.error('Error fetching code blocks:', error);
+    res.status(500).json({ error: "Failed to fetch code blocks" });
+  }
 });
 
-app.get("/codeblocks/:id", (req, res) => {
-  const block = codeBlocks.find((b) => b.id === req.params.id);
-  if (!block) {
-    return res.status(404).json({ error: "Not found" });
+app.get("/codeblocks/:id", async (req, res) => {
+  try {
+    const db = getDb();
+    let block;
+    
+    // Try to find by ObjectId first
+    try {
+      block = await db.collection('codeblocks').findOne(
+        { _id: new ObjectId(req.params.id) },
+        { projection: { solution: 0 } }
+      );
+    } catch (e) {
+      // If ObjectId conversion fails, try to find by title
+      block = await db.collection('codeblocks').findOne(
+        { title: req.params.id },
+        { projection: { solution: 0 } }
+      );
+    }
+
+    if (!block) {
+      return res.status(404).json({ error: "Not found" });
+    }
+
+    // Add id field based on _id
+    const blockWithId = {
+      ...block,
+      id: block._id.toString()
+    };
+    
+    res.json(blockWithId);
+  } catch (error) {
+    console.error('Error fetching code block:', error);
+    res.status(500).json({ error: "Failed to fetch code block" });
   }
-  res.json(block);
 });
 
 // ───── SOCKET.IO ROOMS LOGIC ─────
-const rooms = {}; // roomId => { mentor: userId|null, students: Set<userId> }
+const rooms = {}; // roomId => { mentor: userId|null, students: Set<userId>, code: string, solved: boolean, hintStates: { hint1: { requested, approved }, hint2: { requested, approved }, solution: { requested, approved } } }
 const userSocketMap = new Map(); // userId => socket.id
 
 io.on("connection", (socket) => {
@@ -56,53 +97,125 @@ io.on("connection", (socket) => {
 
     if (!rooms[roomId]) {
       // first user = mentor
-      rooms[roomId] = { mentor: userId, students: new Set() };
+      rooms[roomId] = { 
+        mentor: userId, 
+        students: new Set(),
+        code: "", // Store the current code
+        solved: false, // Store if the challenge is solved
+        hintStates: {
+          hint1: { requested: false, approved: false },
+          hint2: { requested: false, approved: false },
+          solution: { requested: false, approved: false }
+        }
+      };
       socket.emit("role", "mentor");
     } else {
       rooms[roomId].students.add(userId);
       socket.emit("role", "student");
+      
+      // Send complete room state to new student
+      const room = rooms[roomId];
+      console.log("Sending room state to new student:", room); // Debug log
+      
+      // Send all current state
+      socket.emit("roomState", {
+        code: room.code || "",
+        solved: room.solved,
+        hintStates: room.hintStates
+      });
+
+      // Also send individual events to ensure state is properly set
+      if (room.code) {
+        socket.emit("codeUpdate", room.code);
+      }
+      if (room.solved) {
+        socket.emit("solutionFound");
+      }
+      // Send hint states
+      Object.entries(room.hintStates).forEach(([hintKey, state]) => {
+        if (state.requested) {
+          const hintNumber = hintKey === 'solution' ? 'solution' : hintKey.replace('hint', '');
+          socket.emit("hintRequested", { hintNumber });
+        }
+        if (state.approved) {
+          const hintNumber = hintKey === 'solution' ? 'solution' : hintKey.replace('hint', '');
+          socket.emit("hintApproved", { hintNumber });
+        }
+      });
     }
 
     updatePresence(roomId);
   });
 
   socket.on("codeChange", ({ roomId, code }) => {
-    socket.to(roomId).emit("codeUpdate", code);
+    // Store the code in the room state
+    if (rooms[roomId]) {
+      rooms[roomId].code = code;
+      console.log("Updated room code:", code); // Debug log
+      // Broadcast to all clients in the room
+      io.to(roomId).emit("codeUpdate", code);
+    }
   });
 
   socket.on("requestHint", ({ roomId, hintNumber }) => {
     const room = rooms[roomId];
-    if (room && room.mentor) {
-      const mentorSocketId = userSocketMap.get(room.mentor);
-      if (mentorSocketId) {
-        io.to(mentorSocketId).emit("hintRequested", { hintNumber });
-      }
+    if (room) {
+      room.hintStates[`hint${hintNumber}`].requested = true;
+      // Broadcast hint request to all students
+      io.to(roomId).emit("hintRequested", { hintNumber });
+      // Update all clients with current hint states
+      io.to(roomId).emit("hintStatesUpdate", room.hintStates);
     }
   });
 
   socket.on("approveHint", ({ roomId, hintNumber }) => {
-    io.to(roomId).emit("hintApproved", { hintNumber });
+    const room = rooms[roomId];
+    if (room) {
+      room.hintStates[`hint${hintNumber}`].approved = true;
+      // Broadcast hint approval to all students
+      io.to(roomId).emit("hintApproved", { hintNumber });
+      // Update all clients with current hint states
+      io.to(roomId).emit("hintStatesUpdate", room.hintStates);
+    }
   });
 
   socket.on("requestSolution", ({ roomId }) => {
     const room = rooms[roomId];
-    if (room && room.mentor) {
-      const mentorSocketId = userSocketMap.get(room.mentor);
-      if (mentorSocketId) {
-        io.to(mentorSocketId).emit("solutionRequested");
+    if (room) {
+      room.hintStates.solution.requested = true;
+      // Broadcast solution request to all students
+      io.to(roomId).emit("solutionRequested");
+      // Update all clients with current hint states
+      io.to(roomId).emit("hintStatesUpdate", room.hintStates);
+    }
+  });
+
+  socket.on("approveSolution", async ({ roomId }) => {
+    const room = rooms[roomId];
+    if (room) {
+      room.hintStates.solution.approved = true;
+      try {
+        const db = getDb();
+        const block = await db.collection('codeblocks').findOne(
+          { _id: new ObjectId(roomId) }
+        );
+        if (block) {
+          // Broadcast solution to all students
+          io.to(roomId).emit("solutionApproved", { solution: block.solution });
+          // Update all clients with current hint states
+          io.to(roomId).emit("hintStatesUpdate", room.hintStates);
+        }
+      } catch (error) {
+        console.error("Error fetching solution:", error);
       }
     }
   });
 
-  socket.on("approveSolution", ({ roomId }) => {
-    io.to(roomId).emit("solutionApproved");
-  });
-
-  socket.on("showSolution", ({ roomId }) => {
-    io.to(roomId).emit("solutionShown");
-  });
-
   socket.on("solutionFound", ({ roomId }) => {
+    // Store the solved state
+    if (rooms[roomId]) {
+      rooms[roomId].solved = true;
+    }
     // Broadcast to everyone in the room
     io.to(roomId).emit("solutionFound");
   });
@@ -142,6 +255,7 @@ io.on("connection", (socket) => {
 });
 
 // ───── START SERVER ─────
-server.listen(3000, () => {
-  console.log("Server listening on port 3000");
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
 });

@@ -7,6 +7,7 @@ function HintPanel({ role, hints, socket, roomId }) {
     hint2: { requested: false, approved: false, visible: false },
     solution: { requested: false, approved: false, visible: false }
   });
+  const [solution, setSolution] = useState("");
 
   useEffect(() => {
     // Listen for hint approvals
@@ -22,7 +23,8 @@ function HintPanel({ role, hints, socket, roomId }) {
     });
 
     // Listen for solution approval
-    socket.on("solutionApproved", () => {
+    socket.on("solutionApproved", ({ solution }) => {
+      setSolution(solution);
       setHintStates(prev => ({
         ...prev,
         solution: {
@@ -35,28 +37,33 @@ function HintPanel({ role, hints, socket, roomId }) {
 
     // Listen for hint requests
     socket.on("hintRequested", ({ hintNumber }) => {
-      if (role === "mentor") {
-        setHintStates(prev => ({
-          ...prev,
-          [`hint${hintNumber}`]: {
-            ...prev[`hint${hintNumber}`],
-            requested: true
-          }
-        }));
-      }
+      setHintStates(prev => ({
+        ...prev,
+        [`hint${hintNumber}`]: {
+          ...prev[`hint${hintNumber}`],
+          requested: true
+        }
+      }));
     });
 
     // Listen for solution requests
     socket.on("solutionRequested", () => {
-      if (role === "mentor") {
-        setHintStates(prev => ({
-          ...prev,
-          solution: {
-            ...prev.solution,
-            requested: true
-          }
-        }));
-      }
+      setHintStates(prev => ({
+        ...prev,
+        solution: {
+          ...prev.solution,
+          requested: true
+        }
+      }));
+    });
+
+    // Listen for hint states update when joining room or when states change
+    socket.on("hintStatesUpdate", (states) => {
+      setHintStates(prev => ({
+        hint1: { ...prev.hint1, ...states.hint1, visible: states.hint1.approved },
+        hint2: { ...prev.hint2, ...states.hint2, visible: states.hint2.approved },
+        solution: { ...prev.solution, ...states.solution, visible: states.solution.approved }
+      }));
     });
 
     return () => {
@@ -64,85 +71,105 @@ function HintPanel({ role, hints, socket, roomId }) {
       socket.off("solutionApproved");
       socket.off("hintRequested");
       socket.off("solutionRequested");
+      socket.off("hintStatesUpdate");
     };
   }, [socket, role]);
 
   const requestHint = (hintNumber) => {
+    // Only allow requesting hint 2 if hint 1 is approved
+    if (hintNumber === 2 && !hintStates.hint1.approved) {
+      alert("You must get the first hint approved before requesting the second hint");
+      return;
+    }
     socket.emit("requestHint", { roomId, hintNumber });
-    setHintStates(prev => ({
-      ...prev,
-      [`hint${hintNumber}`]: {
-        ...prev[`hint${hintNumber}`],
-        requested: true
-      }
-    }));
   };
 
   const approveHint = (hintNumber) => {
     socket.emit("approveHint", { roomId, hintNumber });
-    setHintStates(prev => ({
-      ...prev,
-      [`hint${hintNumber}`]: {
-        ...prev[`hint${hintNumber}`],
-        approved: true,
-        visible: true
-      }
-    }));
   };
 
   const requestSolution = () => {
+    // Only allow requesting solution if both hints are approved
+    if (!hintStates.hint1.approved || !hintStates.hint2.approved) {
+      alert("You must get both hints approved before requesting the solution");
+      return;
+    }
     socket.emit("requestSolution", { roomId });
-    setHintStates(prev => ({
-      ...prev,
-      solution: {
-        ...prev.solution,
-        requested: true
-      }
-    }));
   };
 
   const approveSolution = () => {
     socket.emit("approveSolution", { roomId });
-    setHintStates(prev => ({
-      ...prev,
-      solution: {
-        ...prev.solution,
-        approved: true,
-        visible: true
-      }
-    }));
   };
 
   return (
-    <div style={{
-      padding: "1rem",
-      border: "1px solid #ddd",
+    <div style={{ 
+      width: "300px", 
+      padding: "1rem", 
+      backgroundColor: "#f8f9fa", 
       borderRadius: "8px",
-      marginLeft: "1rem",
-      minWidth: "250px"
+      border: "1px solid #ddd"
     }}>
-      <h3>{role === "mentor" ? "Students requests:" : "Ask the Mentor for:"}</h3>
-      
-      {/* Hint 1 */}
-      <div style={{ marginBottom: "1rem" }}>
-        {role === "student" ? (
+      <h3 style={{ marginTop: 0 }}>Hints</h3>
+
+      {/* Student's Hint Request Buttons */}
+      {role === "student" && (
+        <>
           <button
             onClick={() => requestHint(1)}
             disabled={hintStates.hint1.requested}
             style={{
               width: "100%",
               padding: "0.5rem",
-              backgroundColor: hintStates.hint1.requested ? "#ccc" : "#007bff",
+              backgroundColor: hintStates.hint1.requested ? "#6c757d" : "#007bff",
               color: "white",
               border: "none",
               borderRadius: "4px",
-              cursor: hintStates.hint1.requested ? "default" : "pointer"
+              cursor: hintStates.hint1.requested ? "not-allowed" : "pointer",
+              marginBottom: "1rem"
             }}
           >
-            Hint 1
+            {hintStates.hint1.requested ? "Hint Requested" : "Request Hint 1"}
           </button>
-        ) : (
-          hintStates.hint1.requested && !hintStates.hint1.approved && (
+
+          <button
+            onClick={() => requestHint(2)}
+            disabled={hintStates.hint2.requested || !hintStates.hint1.approved}
+            style={{
+              width: "100%",
+              padding: "0.5rem",
+              backgroundColor: hintStates.hint2.requested ? "#6c757d" : "#007bff",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: hintStates.hint2.requested ? "not-allowed" : "pointer",
+              marginBottom: "1rem"
+            }}
+          >
+            {hintStates.hint2.requested ? "Hint Requested" : "Request Hint 2"}
+          </button>
+
+          <button
+            onClick={requestSolution}
+            disabled={hintStates.solution.requested || !hintStates.hint1.approved || !hintStates.hint2.approved}
+            style={{
+              width: "100%",
+              padding: "0.5rem",
+              backgroundColor: hintStates.solution.requested ? "#6c757d" : "#28a745",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: hintStates.solution.requested ? "not-allowed" : "pointer"
+            }}
+          >
+            {hintStates.solution.requested ? "Solution Requested" : "Request Solution"}
+          </button>
+        </>
+      )}
+
+      {/* Mentor's Hint Approval Buttons */}
+      {role === "mentor" && (
+        <>
+          {hintStates.hint1.requested && !hintStates.hint1.approved && (
             <button
               onClick={() => approveHint(1)}
               style={{
@@ -152,40 +179,15 @@ function HintPanel({ role, hints, socket, roomId }) {
                 color: "white",
                 border: "none",
                 borderRadius: "4px",
-                cursor: "pointer"
+                cursor: "pointer",
+                marginBottom: "1rem"
               }}
             >
-              Provide Hint 1
+              Approve Hint 1
             </button>
-          )
-        )}
-        {hintStates.hint1.visible && (
-          <div style={{ marginTop: "0.5rem", padding: "0.5rem", backgroundColor: "#f8f9fa", borderRadius: "4px" }}>
-            {hints[0]}
-          </div>
-        )}
-      </div>
+          )}
 
-      {/* Hint 2 */}
-      <div style={{ marginBottom: "1rem" }}>
-        {role === "student" ? (
-          <button
-            onClick={() => requestHint(2)}
-            disabled={hintStates.hint2.requested}
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              backgroundColor: hintStates.hint2.requested ? "#ccc" : "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: hintStates.hint2.requested ? "default" : "pointer"
-            }}
-          >
-            Hint 2
-          </button>
-        ) : (
-          hintStates.hint2.requested && !hintStates.hint2.approved && (
+          {hintStates.hint2.requested && !hintStates.hint2.approved && (
             <button
               onClick={() => approveHint(2)}
               style={{
@@ -195,37 +197,41 @@ function HintPanel({ role, hints, socket, roomId }) {
                 color: "white",
                 border: "none",
                 borderRadius: "4px",
-                cursor: "pointer"
+                cursor: "pointer",
+                marginBottom: "1rem"
               }}
             >
-              Provide Hint 2
+              Approve Hint 2
             </button>
-          )
-        )}
-        {hintStates.hint2.visible && (
-          <div style={{ marginTop: "0.5rem", padding: "0.5rem", backgroundColor: "#f8f9fa", borderRadius: "4px" }}>
-            {hints[1]}
-          </div>
-        )}
-      </div>
+          )}
+        </>
+      )}
 
-      {/* Show Solution Button */}
-      {role === "student" && hintStates.hint1.approved && hintStates.hint2.approved && (
-        <button
-          onClick={requestSolution}
-          disabled={hintStates.solution.requested}
-          style={{
-            width: "100%",
-            padding: "0.5rem",
-            backgroundColor: hintStates.solution.requested ? "#ccc" : "#dc3545",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: hintStates.solution.requested ? "default" : "pointer"
-          }}
-        >
-          Request Solution
-        </button>
+      {/* Hint Displays */}
+      {hintStates.hint1.visible && (
+        <div style={{ 
+          marginTop: "1rem", 
+          padding: "1rem", 
+          backgroundColor: "#fff", 
+          borderRadius: "4px",
+          border: "1px solid #ddd"
+        }}>
+          <h4 style={{ marginTop: 0, marginBottom: "0.5rem" }}>Hint 1:</h4>
+          <p style={{ margin: 0 }}>{hints[0]}</p>
+        </div>
+      )}
+
+      {hintStates.hint2.visible && (
+        <div style={{ 
+          marginTop: "1rem", 
+          padding: "1rem", 
+          backgroundColor: "#fff", 
+          borderRadius: "4px",
+          border: "1px solid #ddd"
+        }}>
+          <h4 style={{ marginTop: 0, marginBottom: "0.5rem" }}>Hint 2:</h4>
+          <p style={{ margin: 0 }}>{hints[1]}</p>
+        </div>
       )}
 
       {/* Mentor's Solution Approval Button */}
@@ -266,7 +272,7 @@ function HintPanel({ role, hints, socket, roomId }) {
             borderRadius: "4px",
             border: "1px solid #eee"
           }}>
-            {codeBlocks.find(b => b.id === roomId)?.solution || "Solution not found"}
+            {solution}
           </pre>
         </div>
       )}
