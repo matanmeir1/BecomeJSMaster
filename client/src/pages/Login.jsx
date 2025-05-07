@@ -49,7 +49,7 @@ function Login({ setIsAuthenticated }) {
           letterSpacing: "2px",
           textShadow: shadows.glow
         }}>
-          Welcome to Code Together
+          Welcome to BecomeJSMaster
         </h2>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: spacing.md }}>
