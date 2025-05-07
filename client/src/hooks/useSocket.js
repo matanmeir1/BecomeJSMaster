@@ -11,7 +11,7 @@ export default function useSocket({ roomId, userId, navigate, handlers }) {
 
   // Setup and teardown socket connection
   useEffect(() => {
-    const socket = io("http://localhost:3000");
+    const socket = io(import.meta.env.VITE_API_URL);
     socketRef.current = socket;
 
     // Join a specific room with user ID
