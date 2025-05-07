@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
-import { io } from "socket.io-client";
 import codeBlocks from "./localCodeBlocks"; // includes solution
 import PresencePanel from "../components/PresencePanel";
 import HintPanel from "../components/HintPanel";
@@ -77,27 +76,23 @@ function CodeBlock({ setIsAuthenticated }) {
 
 
   // ───── HANDLE CODE CHANGE ─────
-  const handleChange = (value) => {
-    try {
-      if (value !== code) {
-        setCode(value);
-        socketRef.current.emit("codeChange", { roomId: id, code: value });
-      }
+const handleChange = (value) => {
+  try {
+    if (value !== code) {
+      setCode(value);
+      socketRef.current.emit("codeChange", { roomId: id, code: value });
 
-      if (role === "student" && block) {
-        const correct = codeBlocks.find((b) => b.title === block.title)?.solution;
-        const normalize = (str) => str.replace(/\s+/g, "").trim();
-        const isSolved = correct && normalize(value) === normalize(correct);
-        if (isSolved && !solved) {
-          setSolved(true);
-          socketRef.current.emit("solutionFound", { roomId: id });
-        }
+   
+      if (role === "student") {
+        socketRef.current.emit("checkSolution", { roomId: id, code: value });
       }
-    } catch (error) {
-      console.error("Error handling code change:", error);
-      alert("Failed to update code. Please try again.");
     }
-  };
+  } catch (error) {
+    console.error("Error handling code change:", error);
+    alert("Failed to update code. Please try again.");
+  }
+};
+
 
   
   if (isLoading) {

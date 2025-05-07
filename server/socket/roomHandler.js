@@ -76,6 +76,7 @@ module.exports = function (io) {
       }
     });
 
+
     socket.on("codeChange", ({ roomId, code }) => {
       try {
         // Store the code in the room state
@@ -154,6 +155,28 @@ module.exports = function (io) {
       // Broadcast to everyone in the room
       io.to(roomId).emit("solutionFound");
     });
+
+    socket.on("checkSolution", async ({ roomId, code }) => {
+      try {
+        const db = getDb();
+        const block = await db.collection("codeblocks").findOne({ _id: new ObjectId(roomId) });
+    
+        if (!block) return;
+    
+        const normalize = (str) => str.replace(/\s+/g, "").trim();
+    
+        const isCorrect = normalize(code) === normalize(block.solution);
+    
+        if (isCorrect) {
+          rooms[roomId].solved = true;
+          io.to(roomId).emit("solutionFound");
+        }
+      } catch (error) {
+        console.error("Error in checkSolution:", error);
+        socket.emit("error", { message: "Failed to verify solution" });
+      }
+    });
+    
 
     socket.on("disconnect", () => {
       try {
