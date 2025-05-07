@@ -1,6 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { colors, spacing, shadows, cardStyles, buttonStyles, matrixBackground } from "../styles/common";
+import { fetchCodeblocks } from "../api/codeBlocksApi";
+
+
 
 function Lobby({ setIsAuthenticated }) {
   const navigate = useNavigate();
@@ -14,14 +17,14 @@ function Lobby({ setIsAuthenticated }) {
   };
 
   useEffect(() => {
-    fetch("http://localhost:3000/codeblocks")
-      .then((res) => res.json())
+    fetchCodeblocks()
       .then((data) => {
         console.log("Fetched codeblocks:", data);
         setBlocks(data);
       })
       .catch((err) => console.error("Failed to load codeblocks:", err));
   }, []);
+  
 
   return (
     <div style={{ 

@@ -10,7 +10,7 @@ import HintPanel from "../components/HintPanel";
 import { getRandomMotivation } from "../utils/motivations";
 import { colors, spacing, shadows, cardStyles, buttonStyles, matrixBackground, borderRadius } from "../styles/common";
 import useSocket from "../hooks/useSocket";
-
+import { fetchCodeblockById } from "../api/codeBlocksApi";
 
 // ───── UTILS ─────
 function getUserId() {
@@ -39,24 +39,21 @@ function CodeBlock({ setIsAuthenticated }) {
 
   // ───── FETCH CODE BLOCK FROM SERVER ─────
   useEffect(() => {
-    setIsLoading(true);  // Set loading to true before fetch
-    fetch(`http://localhost:3000/codeblocks/${id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Not found");
-        return res.json();
-      })
+    setIsLoading(true);
+    fetchCodeblockById(id)
       .then((data) => {
         setBlock(data);
-        setIsLoading(false);  // Set loading to false after data is set
+        setIsLoading(false);
       })
       .catch(() => {
         alert("Code block not found");
         navigate("/");
       });
   }, [id, navigate]);
-
-
   
+
+
+
   // ───── SOCKET CONNECTION ─────
   const socketRef = useSocket({
     roomId: id,
