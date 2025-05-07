@@ -13,13 +13,19 @@ const { connectToMongo } = require("./db/dbConnection");
 
 // ───── APP SETUP ─────
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: ["https://become-js-master.vercel.app", "http://localhost:5173"],
+  methods: ["GET", "POST"]
+}));
 app.use(express.json());
 
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "https://become-js-master.vercel.app", methods: ["GET", "POST"] },
+  cors: { 
+    origin: ["https://become-js-master.vercel.app", "http://localhost:5173"],
+    methods: ["GET", "POST"]
+  },
 });
 
 // ───── MONGODB CONNECTION ─────
