@@ -5,10 +5,12 @@ import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { io } from "socket.io-client";
 import codeBlocks from "./localCodeBlocks"; // includes solution
-import PresencePanel from "./PresencePanel";
-import HintPanel from "./HintPanel";
+import PresencePanel from "../components/PresencePanel";
+import HintPanel from "../components/HintPanel";
 import { getRandomMotivation } from "../utils/motivations";
 import { colors, spacing, shadows, cardStyles, buttonStyles, matrixBackground, borderRadius } from "../styles/common";
+import useSocket from "../hooks/useSocket";
+
 
 // ───── UTILS ─────
 function getUserId() {
@@ -23,7 +25,6 @@ function getUserId() {
 function CodeBlock({ setIsAuthenticated }) {
   const { id } = useParams(); // block ID from URL
   const navigate = useNavigate();
-  const socketRef = useRef();
   const userName = localStorage.getItem("userName");
   const [motivation] = useState(getRandomMotivation());
 
@@ -54,72 +55,29 @@ function CodeBlock({ setIsAuthenticated }) {
       });
   }, [id, navigate]);
 
+
+  
   // ───── SOCKET CONNECTION ─────
-  useEffect(() => {
-    try {
-      const userId = getUserId();
-      socketRef.current = io("http://localhost:3000");
-      const socket = socketRef.current;
-
-      // Initial join
-      socket.emit("joinRoom", { roomId: id, userId });
-
-      // Receive role from server
-      socket.on("role", (receivedRole) => {
-        setRole(receivedRole);
-      });
-
-      // Receive complete room state when joining
-      socket.on("roomState", ({ code: roomCode, solved, hintStates }) => {
-        console.log("Received room state:", { roomCode, solved, hintStates }); // Debug log
-        if (roomCode) {
-          setCode(roomCode);
-        }
-        if (solved) {
-          setSolved(true);
-        }
-        // Pass hint states to HintPanel through socket
-        socket.emit("hintStatesUpdate", hintStates);
-      });
-
-      // Code update from others
-      socket.on("codeUpdate", (newCode) => {
-        console.log("Received code update:", newCode); // Debug log
-        setCode(newCode);
-      });
-
-      // If mentor left
-      socket.on("roomClosed", () => {
-        alert("Mentor left. Returning to lobby...");
-        navigate("/");
-      });
-
-      // Presence updates (mentor + students)
-      socket.on("presenceUpdate", ({ mentor, students }) => {
+  const socketRef = useSocket({
+    roomId: id,
+    userId: getUserId(),
+    navigate,
+    handlers: {
+      onRole: setRole,
+      onCodeUpdate: setCode,
+      onPresenceUpdate: ({ mentor, students }) => {
         setMentorId(mentor);
         setStudents(students);
-      });
-
-      // Listen for solution found
-      socket.on("solutionFound", () => {
-        setSolved(true);
-      });
-
-      // Error handling
-      socket.on("error", ({ message }) => {
-        console.error("Socket error:", message);
-        alert(`Connection error: ${message}`);
-      });
-
-      return () => {
-        socket.disconnect();
-      };
-    } catch (error) {
-      console.error("Socket connection error:", error);
-      alert("Failed to connect to the server. Please try again.");
-      navigate("/login");
+      },
+      onSolutionFound: () => setSolved(true),
+      onHintRequested: () => {}, // optional
+      onHintApproved: () => {}, // optional
+      onHintStatesUpdate: () => {}, // optional
     }
-  }, [id, navigate]);
+  });
+  
+
+
 
   // ───── HANDLE CODE CHANGE ─────
   const handleChange = (value) => {
@@ -144,12 +102,7 @@ function CodeBlock({ setIsAuthenticated }) {
     }
   };
 
-  const handleSignOut = () => {
-    localStorage.removeItem("userName");
-    setIsAuthenticated(false);
-    navigate("/login");
-  };
-
+  
   if (isLoading) {
     return (
       <div style={{
