@@ -34,9 +34,11 @@ function CodeBlock({ setIsAuthenticated }) {
   const [code, setCode] = useState("");         // current code content
   const [mentorId, setMentorId] = useState(null);
   const [students, setStudents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);  // Add loading state
 
   // ───── FETCH CODE BLOCK FROM SERVER ─────
   useEffect(() => {
+    setIsLoading(true);  // Set loading to true before fetch
     fetch(`http://localhost:3000/codeblocks/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Not found");
@@ -44,6 +46,7 @@ function CodeBlock({ setIsAuthenticated }) {
       })
       .then((data) => {
         setBlock(data);
+        setIsLoading(false);  // Set loading to false after data is set
       })
       .catch(() => {
         alert("Code block not found");
@@ -147,7 +150,24 @@ function CodeBlock({ setIsAuthenticated }) {
     navigate("/login");
   };
 
-  if (!block) return <h2>Code block not found</h2>;
+  if (isLoading) {
+    return (
+      <div style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        backgroundColor: colors.background,
+        color: colors.matrix.green,
+        fontSize: "1.5rem",
+        textShadow: shadows.glow
+      }}>
+        Loading...
+      </div>
+    );
+  }
+
+  if (!block) return null;  // Remove the "code block not found" message
 
   // ───── RENDER UI ─────
   return (

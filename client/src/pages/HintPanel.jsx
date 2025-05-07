@@ -7,6 +7,7 @@ function HintPanel({ role, hints, socket, roomId }) {
     hint2: { requested: false, approved: false },
     solution: { requested: false, approved: false },
   });
+  const [solution, setSolution] = useState("");
 
   useEffect(() => {
     if (!socket) return;
@@ -29,10 +30,15 @@ function HintPanel({ role, hints, socket, roomId }) {
       setHintStates(states);
     });
 
+    socket.on("solutionApproved", ({ solution }) => {
+      setSolution(solution);
+    });
+
     return () => {
       socket.off("hintRequested");
       socket.off("hintApproved");
       socket.off("hintStatesUpdate");
+      socket.off("solutionApproved");
     };
   }, [socket]);
 
@@ -192,9 +198,14 @@ function HintPanel({ role, hints, socket, roomId }) {
             <div style={{ 
               color: colors.accent.purple,
               fontSize: "0.875rem",
-              lineHeight: "1.5"
+              lineHeight: "1.5",
+              fontFamily: "monospace",
+              whiteSpace: "pre-wrap",
+              backgroundColor: "rgba(157, 78, 221, 0.1)",
+              padding: spacing.sm,
+              borderRadius: borderRadius.sm
             }}>
-              Solution approved! Check the code editor.
+              {solution}
             </div>
           )}
           {hintStates.solution.requested && !hintStates.solution.approved && (

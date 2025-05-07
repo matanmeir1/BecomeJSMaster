@@ -6,7 +6,7 @@ const express = require("express");
 const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io");
-const { connectToMongo, getDb } = require("./db");
+const { connectToMongo, getDb } = require("./db/dbConnection");
 const { ObjectId } = require('mongodb');
 
 // ───── APP SETUP ─────

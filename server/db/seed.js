@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { connectToMongo, getDb, closeConnection } = require('./db');
+const { connectToMongo, getDb, closeConnection } = require('./dbConnection');
 
 const codeBlocks = [
   {
