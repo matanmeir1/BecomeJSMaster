@@ -1,5 +1,10 @@
+// logs all code blocks in the database to console
+
+// ───── DEPENDENCIES ─────
 const { connectToMongo, getDb, closeConnection } = require('./dbConnection');
 
+// ───── MAIN FUNCTION ─────
+// Connects to MongoDB and logs code block titles and hints
 async function checkDatabase() {
   try {
     await connectToMongo();
@@ -28,4 +33,5 @@ async function checkDatabase() {
   }
 }
 
-checkDatabase(); 
+// ───── EXECUTE ─────
+checkDatabase();

@@ -1,6 +1,11 @@
+// clears and inserts predefined code blocks into database
+
+// ───── DEPENDENCIES ─────
 require('dotenv').config();
 const { connectToMongo, getDb, closeConnection } = require('./dbConnection');
 
+// ───── DATA TO SEED ─────
+// List of code blocks to insert into the database
 const codeBlocks = [
   {
     title: "Reverse a String",
@@ -147,6 +152,8 @@ const codeBlocks = [
   }
 ];
 
+// ───── SEED FUNCTION ─────
+// Clears and inserts predefined code blocks into the database
 async function seed() {
   try {
     await connectToMongo();
@@ -169,4 +176,5 @@ async function seed() {
   }
 }
 
-seed(); 
+// ───── EXECUTE SEEDING ─────
+seed();

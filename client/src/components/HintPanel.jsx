@@ -1,14 +1,25 @@
+// manages hint and solution interaction between mentor and student
+
+// ───── REACT IMPORTS ─────
 import { useState, useEffect } from "react";
+
+// ───── STYLE IMPORTS ─────
 import { colors, spacing, shadows, cardStyles, buttonStyles, borderRadius } from "../styles/common";
 
+// ───── HintPanel COMPONENT ─────
 function HintPanel({ role, hints, socket, roomId }) {
+
+  // State for tracking hint request/approval status
   const [hintStates, setHintStates] = useState({
     hint1: { requested: false, approved: false },
     hint2: { requested: false, approved: false },
     solution: { requested: false, approved: false },
   });
+
+  // State for holding the approved solution
   const [solution, setSolution] = useState("");
 
+  // Establish socket listeners for hint events
   useEffect(() => {
     if (!socket) return;
 
@@ -42,14 +53,17 @@ function HintPanel({ role, hints, socket, roomId }) {
     };
   }, [socket]);
 
+  // Emit hint request event from student
   const requestHint = (hintNumber) => {
     socket.emit("requestHint", { roomId, hintNumber });
   };
 
+  // Emit hint approval event from mentor
   const approveHint = (hintNumber) => {
     socket.emit("approveHint", { roomId, hintNumber });
   };
 
+  // ───── COMPONENT RETURN ─────
   return (
     <div style={{ 
       ...cardStyles.glass,
@@ -146,6 +160,7 @@ function HintPanel({ role, hints, socket, roomId }) {
           );
         })}
 
+        {/* Solution block */}
         <div style={{
           padding: spacing.md,
           borderRadius: borderRadius.md,
@@ -238,4 +253,5 @@ function HintPanel({ role, hints, socket, roomId }) {
   );
 }
 
-export default HintPanel; 
+// ───── EXPORT ─────
+export default HintPanel;

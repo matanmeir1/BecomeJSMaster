@@ -1,11 +1,17 @@
+// renders login form and stores user name in localStorage
+
+// ───── DEPENDENCIES ─────
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { colors, spacing, shadows, cardStyles, inputStyles, buttonStyles, matrixBackground } from "../styles/common";
 
+// ───── MAIN COMPONENT ─────
+// Login screen to authenticate user by name
 function Login({ setIsAuthenticated }) {
   const [name, setName] = useState("");
   const navigate = useNavigate();
 
+  // Handle form submission and set user identity
   const handleSubmit = (e) => {
     e.preventDefault();
     if (name.trim()) {
@@ -15,6 +21,7 @@ function Login({ setIsAuthenticated }) {
     }
   };
 
+  // ───── RENDER UI ─────
   return (
     <div style={{ 
       display: "flex", 
@@ -101,4 +108,5 @@ function Login({ setIsAuthenticated }) {
   );
 }
 
-export default Login; 
+// ───── EXPORT ─────
+export default Login;

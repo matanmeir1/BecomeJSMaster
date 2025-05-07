@@ -1,3 +1,5 @@
+// sets up express server, connects to mongo, and configures socket.io + api routes
+
 // ───── LOAD ENVIRONMENT VARIABLES ─────
 require("dotenv").config();
 

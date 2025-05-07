@@ -1,3 +1,6 @@
+// provides REST api to get all or specific code blocks
+
+// ───── DEPENDENCIES ─────
 const express = require("express");
 const { ObjectId } = require("mongodb");
 const { getDb } = require("../db/dbConnection");
@@ -5,6 +8,7 @@ const { getDb } = require("../db/dbConnection");
 const router = express.Router();
 
 // ───── GET /codeblocks ─────
+// Returns all code blocks excluding their solutions, sorted by difficulty
 router.get("/", async (req, res) => {
   try {
     const db = getDb();
@@ -28,6 +32,7 @@ router.get("/", async (req, res) => {
 });
 
 // ───── GET /codeblocks/:id ─────
+// Returns a single code block by ID or by title, excluding the solution
 router.get("/:id", async (req, res) => {
   try {
     const db = getDb();
@@ -59,4 +64,5 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// ───── EXPORT ROUTER ─────
 module.exports = router;

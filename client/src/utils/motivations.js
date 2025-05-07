@@ -1,3 +1,4 @@
+// ───── MOTIVATIONAL PHRASES ─────
 const motivations = [
   "Every line of code is a step towards mastery!",
   "Your code today shapes your skills tomorrow!",
@@ -11,7 +12,9 @@ const motivations = [
   "Your journey to coding excellence continues!"
 ];
 
+// ───── RANDOM SELECTOR FUNCTION ─────
+// Returns a random motivational string from the list
 export function getRandomMotivation() {
   const randomIndex = Math.floor(Math.random() * motivations.length);
   return motivations[randomIndex];
-} 
+}

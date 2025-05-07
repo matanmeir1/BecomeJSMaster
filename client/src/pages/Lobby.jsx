@@ -1,21 +1,25 @@
+// displays list of code blocks and handles sign-out
+
+// ───── DEPENDENCIES ─────
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { colors, spacing, shadows, cardStyles, buttonStyles, matrixBackground } from "../styles/common";
 import { fetchCodeblocks } from "../api/codeBlocksApi";
 
-
-
+// ───── MAIN COMPONENT ─────
 function Lobby({ setIsAuthenticated }) {
   const navigate = useNavigate();
   const [blocks, setBlocks] = useState([]);
   const userName = localStorage.getItem("userName");
 
+  // Handle user sign out
   const handleSignOut = () => {
     localStorage.removeItem("userName");
     setIsAuthenticated(false);
     navigate("/login");
   };
 
+  // Fetch code blocks on component mount
   useEffect(() => {
     fetchCodeblocks()
       .then((data) => {
@@ -24,8 +28,8 @@ function Lobby({ setIsAuthenticated }) {
       })
       .catch((err) => console.error("Failed to load codeblocks:", err));
   }, []);
-  
 
+  // ───── RENDER UI ─────
   return (
     <div style={{ 
       padding: spacing.lg,
@@ -142,4 +146,5 @@ function Lobby({ setIsAuthenticated }) {
   );
 }
 
+// ───── EXPORT ─────
 export default Lobby;

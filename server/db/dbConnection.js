@@ -1,9 +1,15 @@
+// handles mongodb connection setup and teardown
+
+// ───── DEPENDENCIES ─────
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
+// ───── GLOBAL STATE ─────
 let db = null;
 let client = null;
 
+// ───── CONNECT TO MONGODB ─────
+// Initializes MongoDB connection using environment variable
 async function connectToMongo() {
   try {
     // Debug: Check if environment variable is loaded
@@ -23,6 +29,8 @@ async function connectToMongo() {
   }
 }
 
+// ───── GET DATABASE INSTANCE ─────
+// Returns the initialized MongoDB database object
 function getDb() {
   if (!db) {
     throw new Error('Database not initialized. Call connectToMongo() first.');
@@ -30,6 +38,8 @@ function getDb() {
   return db;
 }
 
+// ───── CLOSE CONNECTION ─────
+// Gracefully closes the MongoDB client
 async function closeConnection() {
   if (client) {
     await client.close();
@@ -37,8 +47,9 @@ async function closeConnection() {
   }
 }
 
+// ───── EXPORTS ─────
 module.exports = {
   connectToMongo,
   getDb,
   closeConnection
-}; 
+};

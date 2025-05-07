@@ -1,6 +1,11 @@
+// shows mentor and student list in the current room
+
+// ───── REACT & STYLES IMPORTS ─────
 import React from "react";
 import { colors, spacing, shadows, cardStyles } from "../styles/common";
 
+// ───── PresencePanel COMPONENT ─────
+// Displays current mentor and list of students in the room
 function PresencePanel({ mentor, students }) {
   return (
     <div style={{
@@ -22,6 +27,8 @@ function PresencePanel({ mentor, students }) {
       }}>
         Room Members
       </h4>
+
+      {/* Mentor Display */}
       <div style={{ marginBottom: spacing.sm }}>
         <div style={{ 
           color: colors.accent.blue,
@@ -39,6 +46,8 @@ function PresencePanel({ mentor, students }) {
           {mentor || "Waiting for mentor..."}
         </div>
       </div>
+
+      {/* Students Display */}
       <div>
         <div style={{ 
           color: colors.accent.purple,
@@ -75,6 +84,7 @@ function PresencePanel({ mentor, students }) {
         )}
       </div>
 
+      {/* ───── SLIDE IN ANIMATION ───── */}
       <style>
         {`
           @keyframes slideIn {
@@ -93,4 +103,5 @@ function PresencePanel({ mentor, students }) {
   );
 }
 
+// ───── EXPORT ─────
 export default PresencePanel;

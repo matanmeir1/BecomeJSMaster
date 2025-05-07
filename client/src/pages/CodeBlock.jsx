@@ -1,9 +1,10 @@
+// main code collaboration interface with socket logic and editor
+
 // ───── DEPENDENCIES ─────
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
-import codeBlocks from "./localCodeBlocks"; // includes solution
 import PresencePanel from "../components/PresencePanel";
 import HintPanel from "../components/HintPanel";
 import { getRandomMotivation } from "../utils/motivations";
@@ -11,7 +12,8 @@ import { colors, spacing, shadows, cardStyles, buttonStyles, matrixBackground, b
 import useSocket from "../hooks/useSocket";
 import { fetchCodeblockById } from "../api/codeBlocksApi";
 
-// ───── UTILS ─────
+// ───── UTILITIES ─────
+// Retrieve user ID from localStorage
 function getUserId() {
   const userName = localStorage.getItem("userName");
   if (!userName) {
@@ -28,13 +30,13 @@ function CodeBlock({ setIsAuthenticated }) {
   const [motivation] = useState(getRandomMotivation());
 
   // ───── STATE HOOKS ─────
-  const [role, setRole] = useState(null);       // "mentor" | "student"
-  const [solved, setSolved] = useState(false);  // whether student solved it
-  const [block, setBlock] = useState(null);     // code block data
-  const [code, setCode] = useState("");         // current code content
+  const [role, setRole] = useState(null);
+  const [solved, setSolved] = useState(false);
+  const [block, setBlock] = useState(null);
+  const [code, setCode] = useState("");
   const [mentorId, setMentorId] = useState(null);
   const [students, setStudents] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);  // Add loading state
+  const [isLoading, setIsLoading] = useState(true);
 
   // ───── FETCH CODE BLOCK FROM SERVER ─────
   useEffect(() => {
@@ -49,9 +51,6 @@ function CodeBlock({ setIsAuthenticated }) {
         navigate("/");
       });
   }, [id, navigate]);
-  
-
-
 
   // ───── SOCKET CONNECTION ─────
   const socketRef = useSocket({
@@ -66,35 +65,30 @@ function CodeBlock({ setIsAuthenticated }) {
         setStudents(students);
       },
       onSolutionFound: () => setSolved(true),
-      onHintRequested: () => {}, // optional
-      onHintApproved: () => {}, // optional
-      onHintStatesUpdate: () => {}, // optional
+      onHintRequested: () => {},
+      onHintApproved: () => {},
+      onHintStatesUpdate: () => {},
     }
   });
-  
-
-
 
   // ───── HANDLE CODE CHANGE ─────
-const handleChange = (value) => {
-  try {
-    if (value !== code) {
-      setCode(value);
-      socketRef.current.emit("codeChange", { roomId: id, code: value });
+  const handleChange = (value) => {
+    try {
+      if (value !== code) {
+        setCode(value);
+        socketRef.current.emit("codeChange", { roomId: id, code: value });
 
-   
-      if (role === "student") {
-        socketRef.current.emit("checkSolution", { roomId: id, code: value });
+        if (role === "student") {
+          socketRef.current.emit("checkSolution", { roomId: id, code: value });
+        }
       }
+    } catch (error) {
+      console.error("Error handling code change:", error);
+      alert("Failed to update code. Please try again.");
     }
-  } catch (error) {
-    console.error("Error handling code change:", error);
-    alert("Failed to update code. Please try again.");
-  }
-};
+  };
 
-
-  
+  // ───── LOADING STATE ─────
   if (isLoading) {
     return (
       <div style={{
@@ -112,7 +106,7 @@ const handleChange = (value) => {
     );
   }
 
-  if (!block) return null;  // Remove the "code block not found" message
+  if (!block) return null;
 
   // ───── RENDER UI ─────
   return (
@@ -124,6 +118,7 @@ const handleChange = (value) => {
     }}>
       <div style={matrixBackground} />
 
+      {/* ───── HEADER PANEL ───── */}
       <div style={{ 
         ...cardStyles.glass,
         marginBottom: spacing.xl,
@@ -189,7 +184,9 @@ const handleChange = (value) => {
         </div>
       </div>
 
+      {/* ───── MAIN LAYOUT ───── */}
       <div style={{ display: "flex", gap: spacing.lg }}>
+        {/* ───── CODE EDITOR PANEL ───── */}
         <div style={{ 
           ...cardStyles.glass,
           flex: 1,
@@ -290,6 +287,7 @@ const handleChange = (value) => {
           )}
         </div>
 
+        {/* ───── HINT PANEL ───── */}
         <HintPanel 
           role={role}
           hints={block.hints}
@@ -298,8 +296,10 @@ const handleChange = (value) => {
         />
       </div>
 
+      {/* ───── PRESENCE PANEL ───── */}
       <PresencePanel mentor={mentorId} students={students} />
 
+      {/* ───── ANIMATIONS ───── */}
       <style>
         {`
           @keyframes slideIn {
@@ -326,4 +326,5 @@ const handleChange = (value) => {
   );
 }
 
+// ───── EXPORT ─────
 export default CodeBlock;
