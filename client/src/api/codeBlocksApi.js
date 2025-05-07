@@ -1,7 +1,7 @@
 // provides api functions to fetch code block data from the server
 
 // ───── CONFIGURATION ─────
-const API_URL = "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // ───── API CALLS ─────
 

@@ -22,33 +22,47 @@ A real-time coding environment built for students and mentors to collaborate, pr
 ---
 
 ## 📁 Project Structure
-
-client/
-├── components/
-│   ├── HintPanel.jsx
-│   └── PresencePanel.jsx
-├── pages/
-│   ├── Login.jsx
-│   ├── Lobby.jsx
-│   └── CodeBlock.jsx
-├── hooks/
-│   └── useSocket.js
-├── api/
-│   └── codeBlocksApi.js
-├── utils/
-│   └── motivations.js
-└── App.jsx
-
-server/
-├── routes/
-│   └── codeBlocksRoutes.js
-├── db/
-│   └── dbConnection.js
-├── socket/
-│   └── roomHandler.js
-├── seed.js
-├── check.js
-└── server.js
+BecomeJSMaster/
+├── client/
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── codeblocks.js
+│   │   ├── components/
+│   │   │   ├── HintPanel.jsx
+│   │   │   └── PresencePanel.jsx
+│   │   ├── hooks/
+│   │   │   └── useSocket.js
+│   │   ├── pages/
+│   │   │   ├── CodeBlock.jsx
+│   │   │   ├── Lobby.jsx
+│   │   │   ├── Login.jsx
+│   │   │   └── localCodeBlocks.js
+│   │   ├── styles/
+│   │   │   └── common.js
+│   │   ├── utils/
+│   │   │   └── motivations.js
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   └── index.css
+│   ├── package.json
+│   └── eslint.config.js
+│
+├── server/
+│   ├── db/
+│   │   ├── connection.js
+│   │   ├── models.js
+│   │   └── seed.js
+│   ├── models/
+│   │   └── CodeBlock.js
+│   ├── routes/
+│   │   └── codeBlocksRoutes.js
+│   ├── socket/
+│   │   └── roomHandler.js
+│   ├── index.js
+│   └── package.json
+│
+├── .gitignore
+└── moveo ex.txt
 
 ---
 
@@ -97,9 +111,11 @@ server/
 
 ---
 
-## 🌐 Live Demo
+## 🌐 Deployment
 
-You can try the app here: 
+-Frontend: https://become-js-master.vercel.app
+-Backend API: https://becomejsmaster-api.onrender.com
+
 
 
 ----
