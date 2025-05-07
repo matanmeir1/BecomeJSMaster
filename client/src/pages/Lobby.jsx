@@ -34,7 +34,10 @@ function Lobby({ setIsAuthenticated }) {
     <div style={{ 
       padding: spacing.lg,
       minHeight: "100vh",
-      position: "relative"
+      position: "relative",
+      width: "100%",
+      maxWidth: "1200px",
+      margin: "0 auto"
     }}>
       <div style={matrixBackground} />
       

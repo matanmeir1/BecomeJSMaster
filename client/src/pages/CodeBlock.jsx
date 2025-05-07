@@ -61,8 +61,8 @@ function CodeBlock({ setIsAuthenticated }) {
       onRole: setRole,
       onCodeUpdate: setCode,
       onPresenceUpdate: ({ mentor, students }) => {
-        setMentorId(mentor);
-        setStudents(students);
+      setMentorId(mentor);
+      setStudents(students);
       },
       onSolutionFound: () => setSolved(true),
       onHintRequested: () => {},
@@ -74,11 +74,11 @@ function CodeBlock({ setIsAuthenticated }) {
   // ───── HANDLE CODE CHANGE ─────
   const handleChange = (value) => {
     try {
-      if (value !== code) {
-        setCode(value);
-        socketRef.current.emit("codeChange", { roomId: id, code: value });
+    if (value !== code) {
+      setCode(value);
+      socketRef.current.emit("codeChange", { roomId: id, code: value });
 
-        if (role === "student") {
+    if (role === "student") {
           socketRef.current.emit("checkSolution", { roomId: id, code: value });
         }
       }
@@ -114,7 +114,10 @@ function CodeBlock({ setIsAuthenticated }) {
       padding: spacing.lg,
       minHeight: "100vh",
       position: "relative",
-      backgroundColor: colors.matrix.black
+      backgroundColor: colors.matrix.black,
+      width: "100%",
+      maxWidth: "1200px",
+      margin: "0 auto"
     }}>
       <div style={matrixBackground} />
 
@@ -227,12 +230,12 @@ function CodeBlock({ setIsAuthenticated }) {
             overflow: "hidden",
             backgroundColor: colors.matrix.black
           }}>
-            <CodeMirror
-              value={code}
-              height="300px"
-              extensions={[javascript()]}
-              onChange={handleChange}
-              readOnly={role === "mentor"}
+      <CodeMirror
+        value={code}
+        height="300px"
+        extensions={[javascript()]}
+        onChange={handleChange}
+        readOnly={role === "mentor"}
               placeholder={role === "student" ? "Write your code here..." : ""}
               theme="dark"
               basicSetup={{
@@ -261,7 +264,7 @@ function CodeBlock({ setIsAuthenticated }) {
             />
           </div>
 
-          {solved && (
+      {solved && (
             <div style={{ 
               fontSize: "4rem", 
               textAlign: "center", 

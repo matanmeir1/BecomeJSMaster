@@ -30,7 +30,10 @@ function Login({ setIsAuthenticated }) {
       justifyContent: "center", 
       minHeight: "100vh",
       padding: spacing.md,
-      position: "relative"
+      position: "relative",
+      width: "100%",
+      maxWidth: "1200px",
+      margin: "0 auto"
     }}>
       <div style={matrixBackground} />
       
