@@ -22,6 +22,7 @@ A real-time coding environment built for students and mentors to collaborate, pr
 ---
 
 ## 📁 Project Structure
+```
 BecomeJSMaster/
 ├── client/
 │   ├── src/
@@ -63,7 +64,7 @@ BecomeJSMaster/
 │
 ├── .gitignore
 └── moveo ex.txt
-
+```
 ---
 
 ## 🎯 Features
